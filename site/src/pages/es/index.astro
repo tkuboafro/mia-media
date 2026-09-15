@@ -1,0 +1,14 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import ArticleList from "../../components/ArticleList.astro";
+import { SITE } from "../../config";
+const lang = "es" as const;
+const articles = (await getCollection("articles", (a) => a.data.lang === lang)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const alternates = Object.fromEntries(SITE.langs.map((l) => [l, `${base}/${l}/`]));
+---
+<Base lang={lang} title={SITE.ui[lang].latest} description={SITE.tagline[lang]} alternates={alternates}>
+  <h1>{SITE.ui[lang].latest}</h1>
+  <ArticleList articles={articles} lang={lang} />
+</Base>
