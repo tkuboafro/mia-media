@@ -37,9 +37,27 @@ def fresh(r):
     try: return (dt.date.today() - dt.date.fromisoformat((r.get("published") or "")[:10])).days <= 10
     except Exception: return True
 
+import re, glob
+def _toks(t):
+    return {x for x in re.findall(r"[一-龠ァ-ヶA-Za-z0-9]{2,}", t or "") if x not in ("日本酒", "発売", "開催", "限定", "新商品", "2026", "受賞", "株式会社", "酒造")}
+
+def used_topics():
+    """すでに記事にした出来事のトークン集合（同じニュースを別URLで拾っても記事を重複させない）"""
+    out = []
+    for f in glob.glob(os.path.join(HOME, "data", "article_*.json")):
+        try: r = json.load(open(f)).get("row") or {}
+        except Exception: continue
+        out.append(_toks(r.get("title", "") + " " + r.get("summary_ja", "")))
+    return out
+
+def dup_of_used(r, topics):
+    t = _toks(r.get("title", "") + " " + r.get("summary_ja", ""))
+    return any(len(t & u) >= 4 for u in topics)
+
 def ranked(extra_files=()):
     used = set(open(USED).read().split()) if os.path.exists(USED) else set()
-    rows = [r for r in load_backlog() if r["url"] not in used]
+    topics = used_topics()
+    rows = [r for r in load_backlog() if r["url"] not in used and not dup_of_used(r, topics)]
     for p in extra_files:
         rows += [r for r in json.load(open(p))["rows"] if r["url"] not in used]
     rows = [r for r in rows if fresh(r)]
