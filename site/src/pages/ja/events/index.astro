@@ -1,0 +1,12 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Newsletter from "../../../components/Newsletter.astro";
+import { SITE, MOD } from "../../../config";
+const lang = "ja" as const;
+const m = MOD[lang];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const alternates = Object.fromEntries(SITE.langs.map((l) => [l, `${base}/${l}/events/`]));
+---
+<Base lang={lang} title={m.events} description={m.eventsSoon} alternates={alternates}>
+  <div class="cols"><section class="narrow"><h1>{m.events}</h1><p class="lead">{m.eventsSoon}</p></section><aside class="rail"><Newsletter lang={lang} /></aside></div>
+</Base>

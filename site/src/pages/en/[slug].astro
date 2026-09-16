@@ -1,32 +1,59 @@
 ---
 import { getCollection, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
-import { SITE, catLabel } from "../../config";
+import ProductCard from "../../components/ProductCard.astro";
+import Newsletter from "../../components/Newsletter.astro";
+import { SITE, MOD, catLabel } from "../../config";
+import { pickFor, weeklyPicks, shopHome } from "../../lib/shop";
 export async function getStaticPaths() {
   const all = await getCollection("articles", (a) => a.data.lang === "en");
   return all.map((a) => ({ params: { slug: a.data.story }, props: { a } }));
 }
 const lang = "en" as const;
+const m = MOD[lang];
 const { a } = Astro.props;
-const { Content } = await render(a);
+const { Content, headings } = await render(a);
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siblings = await getCollection("articles", (x) => x.data.story === a.data.story);
 const alternates = Object.fromEntries(siblings.map((x) => [x.data.lang, `${base}/${x.data.lang}/${x.data.story}/`]));
 const ui = SITE.ui[lang];
 const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang], { year: "numeric", month: "long", day: "numeric" });
+const products = await pickFor({ category: a.data.category, tags: a.data.tags, title: a.data.title, description: a.data.description, akita: a.data.akita }, 2, a.data.story);
+const picks = await weeklyPicks(Math.floor(Date.now() / (7 * 864e5)));
+const related = (await getCollection("articles", (x) => x.data.lang === lang && x.data.story !== a.data.story)).sort((x, y) => y.data.pubDate.valueOf() - x.data.pubDate.valueOf()).slice(0, 3);
+const pageUrl = new URL(`${base}/${lang}/${a.data.story}/`, Astro.site).toString();
+const h2s = headings.filter((h) => h.depth === 2);
+const utm = { medium: "article", campaign: a.data.story, content: lang };
+const cta = { medium: "article_cta", campaign: a.data.story, content: lang };
 ---
 <Base lang={lang} title={a.data.title} description={a.data.description} ogImage={a.data.hero} alternates={alternates} type="article">
-  <article>
-    <div class="meta">{a.data.akita && <span class="badge">{ui.akita}</span>}{a.data.category && <span>{catLabel(a.data.category, lang)}</span>}{a.data.regionEn && <span>{a.data.regionEn}</span>}<span>{ui.published} {fmt(a.data.pubDate)}</span></div>
-    <h1>{a.data.title}</h1>
-    <p class="lead">{a.data.description}</p>
-    {a.data.hero && <figure class="hero"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} />{a.data.heroCredit && <figcaption>{a.data.heroCredit}</figcaption>}</figure>}
-    <div class="body"><Content /></div>
-    <div class="source sources">
-      <h2>{ui.sources}</h2>
-      <ul>{(a.data.sources.length ? a.data.sources : [{ name: a.data.sourceName, title: a.data.sourceTitle, url: a.data.sourceUrl }]).map((s) => <li><a href={s.url} rel="nofollow noopener" target="_blank">{s.name ? `${s.name}「${s.title ?? s.url}」` : (s.title ?? s.url)}</a></li>)}</ul>
-      <p>{ui.sourcesNote}</p>
-    </div>
-    <div class="cta"><span>{SITE.tagline[lang]}</span><a class="btn" href={`${SITE.shop}/?utm_source=journal&utm_medium=article&utm_campaign=${a.data.story}&utm_content=${lang}`}>{ui.shopCta} →</a></div>
-  </article>
+  <div class="cols">
+    <article class="narrow">
+      <div class="meta">{a.data.akita && <span class="badge">{ui.akita}</span>}{a.data.category && <span>{catLabel(a.data.category, lang)}</span>}{a.data.regionEn && <span>{a.data.regionEn}</span>}<span>{ui.published} {fmt(a.data.pubDate)}</span></div>
+      <h1>{a.data.title}</h1>
+      <p class="lead">{a.data.description}</p>
+      {a.data.hero && <figure class="hero" style="display:block"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} />{a.data.heroCredit && <figcaption>{a.data.heroCredit}</figcaption>}</figure>}
+      <div class="body"><Content /></div>
+      {products.length > 0 && (
+        <aside class="taste"><h3>{m.taste}</h3><p class="sub">{m.tasteSub}</p><div class="grid2">{products.map((p) => <ProductCard p={p} lang={lang} utm={utm} />)}</div></aside>
+      )}
+      <div class="source sources">
+        <h2>{ui.sources}</h2>
+        <ul>{(a.data.sources.length ? a.data.sources : [{ name: a.data.sourceName, title: a.data.sourceTitle, url: a.data.sourceUrl }]).map((s) => <li><a href={s.url} rel="nofollow noopener" target="_blank">{s.name ? `${s.name}「${s.title ?? s.url}」` : (s.title ?? s.url)}</a></li>)}</ul>
+        <p>{ui.sourcesNote}</p>
+      </div>
+      <div class="cta2"><div><h3>{m.ctaTitle}</h3><p>{m.ctaText}</p></div><a class="btn" href={shopHome(cta)}>{m.ctaBtn} →</a></div>
+    </article>
+    <aside class="rail">
+      {h2s.length > 0 && <nav class="toc"><strong>{m.toc}</strong>{h2s.map((h) => <a href={`#${h.slug}`}>{h.text}</a>)}</nav>}
+      <div><h3>{m.weekly}</h3><p class="sub">{m.weeklySub}</p><div class="stack">{picks.map((p) => <ProductCard p={p} lang={lang} utm={{ medium: "rail", campaign: a.data.story, content: lang }} compact />)}</div></div>
+      <Newsletter lang={lang} />
+      <div class="share"><a href={`https://wa.me/?text=${encodeURIComponent(a.data.title + " " + pageUrl)}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://x.com/intent/tweet?text=${encodeURIComponent(a.data.title)}&url=${encodeURIComponent(pageUrl)}`} target="_blank" rel="noopener">X</a><a href={`mailto:?subject=${encodeURIComponent(a.data.title)}&body=${encodeURIComponent(pageUrl)}`}>Email</a></div>
+    </aside>
+  </div>
+  {related.length > 0 && (
+    <section class="related"><h2 class="sec-title">{m.related}</h2>
+      <ul class="list">{related.map((r) => <li class="card"><a class="thumb" href={`${base}/${lang}/${r.data.story}/`} aria-hidden="true" tabindex="-1">{r.data.hero && <img src={r.data.hero} alt="" loading="lazy" />}</a><div><div class="kicker"><span>{fmt(r.data.pubDate)}</span></div><h2><a href={`${base}/${lang}/${r.data.story}/`}>{r.data.title}</a></h2><p>{r.data.description}</p></div></li>)}</ul>
+    </section>
+  )}
 </Base>

@@ -1,0 +1,27 @@
+---
+import { MOD, type Lang } from "../config";
+import { shopUrl, type Product } from "../lib/shop";
+const { p, lang, utm, compact = false } = Astro.props as { p: Product; lang: Lang; utm: { medium: string; campaign: string; content?: string }; compact?: boolean };
+const m = MOD[lang];
+const eur = (v: number) => (lang === "en" ? `€${v.toFixed(2)}` : `€${v.toFixed(2).replace(".", ",")}`);
+---
+<a class={`pcard${compact ? " pcard--compact" : ""}`} href={shopUrl(p.handle, utm)} target="_blank" rel="noopener">
+  <span class="pcard__img">{p.image && <img src={p.image} alt="" loading="lazy" />}</span>
+  <span class="pcard__body">
+    <span class="pcard__title">{p.title}</span>
+    <span class="pcard__meta">{p.type}{p.tags.includes("Trial") ? " · 180 ml" : ""}</span>
+    <span class="pcard__price">{eur(p.price)} <small>· {m.order} — {m.ships}</small></span>
+  </span>
+</a>
+<style is:global>
+  .pcard { display:grid; grid-template-columns: 84px 1fr; gap:12px; align-items:center; text-decoration:none; color:var(--ink); border:1px solid var(--line); padding:10px; background:#fff; transition: border-color .15s; }
+  .pcard:hover { border-color: var(--ink); }
+  .pcard__img { aspect-ratio: 1/1; background:var(--grey); display:block; overflow:hidden; }
+  .pcard__img img { width:100%; height:100%; object-fit:contain; mix-blend-mode:multiply; padding:6%; box-sizing:border-box; }
+  .pcard__body { display:grid; gap:2px; min-width:0; }
+  .pcard__title { font-weight:600; font-size:.92rem; line-height:1.3; }
+  .pcard__meta { font-size:.74rem; color:var(--muted); }
+  .pcard__price { font-weight:700; font-size:.95rem; margin-top:4px; }
+  .pcard__price small { font-weight:400; color:var(--muted); font-size:.74rem; }
+  .pcard--compact { grid-template-columns: 64px 1fr; padding:8px; }
+</style>

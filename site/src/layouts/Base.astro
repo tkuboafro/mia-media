@@ -1,11 +1,15 @@
 ---
-import { SITE, type Lang } from "../config";
+import { SITE, NAV, MOD, type Lang } from "../config";
+import { shopHome } from "../lib/shop";
 interface Props { lang: Lang; title: string; description: string; ogImage?: string; alternates?: Record<string, string>; type?: string }
 const { lang, title, description, ogImage, alternates = {}, type = "website" } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ui = SITE.ui[lang];
 const GA = import.meta.env.PUBLIC_GA4_ID;
+const nav = NAV[lang];
+const path = Astro.url.pathname;
+const section = path.includes("/events") ? "events" : "news";
 const consent = { en: ["We use cookieless analytics to see which stories are read. Allow analytics cookies for better statistics?", "Allow", "No thanks"], nl: ["We meten anoniem welke verhalen gelezen worden. Analytische cookies toestaan voor betere statistieken?", "Toestaan", "Nee, bedankt"], de: ["Wir messen anonym, welche Beiträge gelesen werden. Analyse-Cookies für bessere Statistiken erlauben?", "Erlauben", "Nein, danke"], es: ["Medimos de forma anónima qué historias se leen. ¿Permitir cookies analíticas para mejores estadísticas?", "Permitir", "No, gracias"], ja: ["どの記事が読まれているかを匿名で計測しています。より正確な統計のため解析クッキーを許可しますか？", "許可する", "許可しない"] }[lang];
 const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/og-default.png`, Astro.site).toString();
 ---
@@ -38,20 +42,80 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
     <style is:global>
-      :root { --ink:#1a1a1a; --text:#333; --muted:#666; --line:#dcdcdc; --grey:#f2f2f2; --wrap:880px; }
+      :root { --ink:#1a1a1a; --text:#333; --muted:#666; --line:#dcdcdc; --grey:#f2f2f2; --wrap:1140px; }
       * { box-sizing: border-box; }
       html[lang=ja] { --serif: "Noto Serif JP", "Hiragino Mincho ProN", serif; --sans: "Noto Sans JP", "Hiragino Sans", sans-serif; }
       body { margin:0; font-family: var(--sans, Inter), Inter, system-ui, sans-serif; color: var(--text); background:#fff; line-height:1.6; }
       a { color: var(--ink); }
       .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
       header.top { border-bottom:1px solid var(--line); }
-      header.top .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; height:64px; }
-      .brand { font-weight:700; letter-spacing:.06em; text-decoration:none; font-size:.95rem; }
-      .brand small { display:block; font-weight:400; letter-spacing:0; color:var(--muted); font-size:.72rem; }
-      nav.langs { display:flex; gap:10px; font-size:.8rem; }
-      nav.langs a { text-decoration:none; color:var(--muted); padding:4px 6px; }
+      .top__in { display:grid; grid-template-columns: auto 1fr auto; align-items:center; gap:24px; min-height:72px; padding-top:10px; padding-bottom:10px; }
+      .brand { text-decoration:none; display:grid; gap:2px; }
+      .brand__name { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-weight:700; font-size:1.35rem; letter-spacing:.01em; line-height:1; }
+      .brand small { font-weight:400; color:var(--muted); font-size:.7rem; max-width:34ch; line-height:1.3; }
+      .mainnav { display:flex; gap:22px; justify-content:center; font-size:.9rem; font-weight:600; }
+      .mainnav a { text-decoration:none; color:var(--muted); padding:6px 0; border-bottom:2px solid transparent; }
+      .mainnav a:hover, .mainnav a[aria-current] { color:var(--ink); border-bottom-color:var(--ink); }
+      .top__right { display:flex; align-items:center; gap:14px; }
+      nav.langs { display:flex; gap:2px; font-size:.72rem; }
+      nav.langs a { text-decoration:none; color:var(--muted); padding:4px 5px; }
       nav.langs a[aria-current] { color:var(--ink); font-weight:700; border-bottom:2px solid var(--ink); }
-      main { padding: 40px 0 64px; }
+      .shopbtn { display:grid; text-decoration:none; background:var(--ink); color:#fff; padding:8px 14px; border-radius:2px; line-height:1.2; }
+      .shopbtn strong { font-size:.85rem; }
+      .shopbtn small { font-size:.62rem; opacity:.8; white-space:nowrap; }
+      @media (max-width: 900px) { .top__in { grid-template-columns: 1fr auto; } .mainnav { grid-column: 1 / -1; justify-content:flex-start; gap:16px; overflow-x:auto; font-size:.85rem; } .brand small { display:none; } .shopbtn small { display:none; } }
+      main { padding: 32px 0 64px; }
+      .narrow { max-width: 880px; }
+      /* home */
+      .hero { display:grid; grid-template-columns: 1.6fr 1fr; gap:24px; margin-bottom:36px; }
+      @media (max-width: 800px){ .hero { grid-template-columns:1fr; } }
+      .lead-story { display:grid; gap:12px; text-decoration:none; color:var(--ink); }
+      .lead-story .ph { aspect-ratio:16/9; background:var(--grey); overflow:hidden; }
+      .lead-story img { width:100%; height:100%; object-fit:cover; display:block; }
+      .lead-story h2 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height:1.15; margin:0; text-wrap:balance; }
+      .lead-story p { margin:0; font-size:1.02rem; color:var(--text); }
+      .side-stories { display:grid; gap:18px; align-content:start; }
+      .side-story { display:grid; grid-template-columns: 120px 1fr; gap:12px; text-decoration:none; color:var(--ink); }
+      .side-story .ph { aspect-ratio:4/3; background:var(--grey); overflow:hidden; }
+      .side-story img { width:100%; height:100%; object-fit:cover; display:block; }
+      .side-story h3 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size:1.05rem; line-height:1.3; margin:0 0 4px; }
+      .kicker { font-size:.72rem; color:var(--muted); display:flex; gap:10px; margin-bottom:6px; }
+      .band { background:var(--grey); padding:26px 28px; display:grid; grid-template-columns: 1fr auto; gap:24px; align-items:center; margin: 8px 0 40px; }
+      @media (max-width: 800px){ .band { grid-template-columns:1fr; } }
+      .band h2 { font-family: Inter, sans-serif; font-size:1rem; margin:0 0 6px; letter-spacing:.02em; }
+      .band p { margin:0; max-width:70ch; font-size:.95rem; }
+      .band .acts { display:flex; gap:10px; flex-wrap:wrap; }
+      .btn2 { display:inline-block; text-decoration:none; padding:11px 18px; border:1px solid var(--ink); color:var(--ink); font-weight:700; font-size:.85rem; border-radius:2px; background:#fff; }
+      .cols { display:grid; grid-template-columns: 1fr 320px; gap:40px; align-items:start; }
+      @media (max-width: 900px){ .cols { grid-template-columns:1fr; } }
+      .rail { display:grid; gap:24px; position:sticky; top:16px; }
+      .rail h3 { font-family: Inter, sans-serif; font-size:.9rem; margin:0 0 2px; }
+      .rail .sub { font-size:.78rem; color:var(--muted); margin:0 0 10px; }
+      .rail .stack { display:grid; gap:8px; }
+      .sec-title { font-family: Inter, sans-serif; font-size:1rem; letter-spacing:.02em; margin:0 0 16px; padding-bottom:8px; border-bottom:2px solid var(--ink); }
+      .akita { margin-top:44px; }
+      .akita .tiles { display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
+      @media (max-width: 700px){ .akita .tiles { grid-template-columns:1fr; } }
+      .tile { position:relative; display:flex; align-items:flex-end; min-height:150px; text-decoration:none; color:#fff; background:var(--grey) center/cover no-repeat; padding:14px; }
+      .tile::before { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.65)); }
+      .tile span { position:relative; font-weight:700; }
+      /* article */
+      .taste { border:1px solid var(--ink); padding:16px 18px; margin: 28px 0; }
+      .taste h3 { font-family: Inter, sans-serif; font-size:.95rem; margin:0 0 2px; }
+      .taste .sub { font-size:.8rem; color:var(--muted); margin:0 0 12px; }
+      .taste .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      @media (max-width: 700px){ .taste .grid2 { grid-template-columns:1fr; } }
+      .cta2 { background:var(--ink); color:#fff; padding:26px 28px; margin-top:36px; display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; }
+      @media (max-width: 700px){ .cta2 { grid-template-columns:1fr; } }
+      .cta2 h3 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size:1.4rem; margin:0 0 6px; }
+      .cta2 p { margin:0; opacity:.85; font-size:.92rem; max-width:60ch; }
+      .cta2 .btn { background:#fff; color:var(--ink); }
+      .toc { font-size:.82rem; border-left:2px solid var(--line); padding-left:12px; }
+      .toc strong { display:block; margin-bottom:6px; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+      .toc a { display:block; text-decoration:none; color:var(--text); padding:3px 0; }
+      .share { display:flex; gap:8px; flex-wrap:wrap; font-size:.8rem; }
+      .share a { text-decoration:none; border:1px solid var(--line); padding:6px 10px; color:var(--ink); }
+      .related { margin-top:44px; }
       h1 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-weight:700; line-height:1.2; letter-spacing:-.01em; font-size: clamp(1.7rem, 3.4vw, 2.5rem); margin:0 0 12px; }
       .lead { font-size:1.1rem; color:var(--text); margin:0 0 24px; }
       .meta { font-size:.8rem; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
@@ -85,11 +149,20 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
     </style>
   </head>
   <body>
-    <header class="top"><div class="wrap">
-      <a class="brand" href={`${base}/${lang}/`}>{SITE.name}<small>{SITE.tagline[lang]} · by MADE IN AKITA, Amsterdam</small></a>
-      <nav class="langs" aria-label="Language">
-        {SITE.langs.map((l) => <a href={alternates[l] ?? `${base}/${l}/`} aria-current={l === lang ? "page" : undefined} hreflang={l}>{l.toUpperCase()}</a>)}
+    <header class="top"><div class="wrap top__in">
+      <a class="brand" href={`${base}/${lang}/`}><span class="brand__name">{SITE.name}</span><small>{SITE.tagline[lang]}</small></a>
+      <nav class="mainnav" aria-label="Sections">
+        <a href={`${base}/${lang}/`} aria-current={section === "news" && !path.includes("/events") ? "page" : undefined}>{nav.news}</a>
+        <a href={`${base}/${lang}/events/`} aria-current={section === "events" ? "page" : undefined}>{nav.events}</a>
+        <a href={SITE.producers + "?utm_source=sakewire&utm_medium=nav&utm_campaign=breweries"}>{nav.breweries}</a>
+        <a href={SITE.about + "?utm_source=sakewire&utm_medium=nav&utm_campaign=about"}>{nav.about}</a>
       </nav>
+      <div class="top__right">
+        <nav class="langs" aria-label="Language">
+          {SITE.langs.map((l) => <a href={alternates[l] ?? `${base}/${l}/`} aria-current={l === lang ? "page" : undefined} hreflang={l}>{l.toUpperCase()}</a>)}
+        </nav>
+        <a class="shopbtn" href={shopHome({ medium: "header", campaign: "shop", content: lang })}><strong>{nav.shop} →</strong><small>{nav.shopNote}</small></a>
+      </div>
     </div></header>
     <main><div class="wrap"><slot /></div></main>
     {GA && <div class="consent" id="sw-consent" hidden><span>{consent[0]}</span><button type="button" data-c="granted">{consent[1]}</button><button type="button" data-c="denied" class="ghost">{consent[2]}</button></div>}

@@ -1,0 +1,22 @@
+---
+import { MOD, type Lang } from "../config";
+const { lang } = Astro.props as { lang: Lang };
+const m = MOD[lang];
+---
+<form class="nl" method="post" action="https://shop.made-in-akita.com/contact#contact_form" accept-charset="UTF-8" target="_blank">
+  <input type="hidden" name="form_type" value="customer" /><input type="hidden" name="utf8" value="✓" />
+  <input type="hidden" name="contact[tags]" value={`newsletter,sakewire,${lang}`} />
+  <input type="hidden" name="contact[accepts_marketing]" value="true" />
+  <strong>{m.newsTitle}</strong>
+  <p>{m.newsText}</p>
+  <div class="nl__row"><label class="visually-hidden" for={`nl-${lang}`}>Email</label><input id={`nl-${lang}`} type="email" name="contact[email]" placeholder={m.newsPh} required /><button type="submit">{m.newsBtn}</button></div>
+</form>
+<style is:global>
+  .nl { border:1px solid var(--ink); padding:16px; background:#fff; }
+  .nl strong { font-size:.95rem; display:block; margin-bottom:4px; }
+  .nl p { margin:0 0 10px; font-size:.82rem; color:var(--muted); }
+  .nl__row { display:flex; gap:6px; }
+  .nl input[type=email] { flex:1; min-width:0; font: inherit; font-size:.85rem; padding:9px 10px; border:1px solid var(--line); }
+  .nl button { font: inherit; font-size:.8rem; font-weight:700; padding:9px 14px; background:var(--ink); color:#fff; border:0; cursor:pointer; }
+  .visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
