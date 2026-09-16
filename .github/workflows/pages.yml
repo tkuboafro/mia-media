@@ -24,6 +24,8 @@ jobs:
         working-directory: site
       - run: npm run build
         working-directory: site
+        env:
+          PUBLIC_GA4_ID: ${{ vars.PUBLIC_GA4_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
