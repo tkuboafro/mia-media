@@ -56,6 +56,8 @@ def fetch_body(url, limit=6000):
         except Exception: t = ""
     t = re.sub(r"<script.*?</script>|<style.*?</style>", " ", t, flags=re.S)
     t = re.sub(r"<[^>]+>", " ", t); t = re.sub(r"\s+", " ", t)
+    # NUL や制御文字が混ざると subprocess が "embedded null byte" で落ちる（2026-09-16 05:30 の初回自動実行で発生）
+    t = "".join(ch for ch in t if ch == "\n" or ord(ch) >= 32)
     return "SOURCE BODY (extracted text):\n" + t[:limit]
 
 def slugify(s):

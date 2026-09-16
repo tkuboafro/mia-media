@@ -58,11 +58,6 @@ git checkout -q main
 # 記事はブランチ側に居る。main の作業ツリーに残すと翌日の PR に混ざるので消す（マージ済みは tracked なので消えない）
 git clean -qfd site/src/content/articles sns_queue
 
-# ⑦ 久保さんへ通知（Slack Bot トークンがあれば DM、無ければ GitHub の PR 通知メールに任せる）
-if [ -n "${SLACK_BOT_TOKEN:-}" ] && [ -n "${SLACK_APPROVER_ID:-}" ]; then
-  curl -s -X POST https://slack.com/api/chat.postMessage -H "Authorization: Bearer $SLACK_BOT_TOKEN" -H 'Content-Type: application/json' \
-    -d "$(jq -n --arg ch "$SLACK_APPROVER_ID" --arg t "📰 Journal 本日の記事案: $TITLE_EN
-$PR_URL
-マージ＝公開（4言語同時）／クローズ＝見送り" '{channel:$ch, text:$t}')" >> "$LOG" 2>&1
-fi
+# ⑦ #biz-mia_media に Otacon としてレビュー依頼（✅/❌ は sns/approve_watch.py が15分毎に拾う）
+$PY sns/review_request.py "$SLUG" "$PR_URL" >> "$LOG" 2>&1
 echo "=== $(date '+%F %T') done $SLUG ===" >> "$LOG"
