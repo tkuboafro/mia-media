@@ -68,6 +68,14 @@ def main():
                 url = r.stdout.strip().splitlines()[-1]
                 notion.set_props(pid, status="投稿済み", post_url=url)
                 post(CH, f"✅ 公開しました（数分で反映）\n日本語: {url}\nEN: {PUB}/en/{slug}/  NL: {PUB}/nl/{slug}/  DE: {PUB}/de/{slug}/  ES: {PUB}/es/{slug}/", ts)
+                # X へ自動投稿（EN）。失敗しても公開は済んでいるので報告だけ
+                try:
+                    import x_post
+                    meta = json.load(open(mp)); tid = x_post.post_article(slug, meta, "en")
+                    meta["x_post_id"] = tid; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
+                    post(CH, f"🐦 X に投稿しました: https://x.com/TheSakeWire/status/{tid}", ts)
+                except Exception as e:
+                    post(CH, f"⚠️ X 投稿に失敗: {str(e)[:200]}", ts)
             else:
                 notion.set_props(pid, status="承認")
                 post(CH, f"⚠️ 公開処理に失敗しました（再試行します）: {(r.stderr or r.stdout)[-300:]}", ts)
