@@ -88,6 +88,13 @@ def main():
                         post(CH, f"📸 Instagram に投稿しました: {link}", ts)
                 except Exception as e:
                     post(CH, f"⚠️ Instagram 投稿に失敗: {str(e)[:200]}", ts)
+                try:
+                    import threads_post
+                    meta = json.load(open(mp)); tid2, link2 = threads_post.post_article(slug, meta, "en")
+                    meta["threads_post"] = link2; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
+                    post(CH, f"🧵 Threads に投稿しました: {link2}", ts)
+                except Exception as e:
+                    post(CH, f"⚠️ Threads 投稿に失敗: {str(e)[:200]}", ts)
             else:
                 notion.set_props(pid, status="承認")
                 post(CH, f"⚠️ 公開処理に失敗しました（再試行します）: {(r.stderr or r.stdout)[-300:]}", ts)
