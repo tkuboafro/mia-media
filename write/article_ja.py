@@ -9,7 +9,7 @@ from article import fetch_body, pick_hero, slugify, HOME
 PROMPT = """あなたは「MADE IN AKITA Journal」（アムステルダムの日本酒輸入業者が運営する、EU向け日本のお酒メディア）の編集者です。
 以下の日本語の一次情報をもとに、**日本語で**1本の記事を書いてください。この日本語原稿が正本で、承認後に英・蘭・独・西へ翻訳して公開します。
 
-【一次情報】
+【一次情報】{extra_sources}
 見出し: {title}
 URL: {url}
 媒体: {source}
@@ -19,6 +19,13 @@ URL: {url}
 EU読者への切り口: {why_eu}
 {body}
 {feedback}
+
+【編集方針（最重要）】
+- このメディアは「日本のお酒事情の最新情報」をヨーロッパの読者に伝えるもので、秋田県や自治体のプロモーションではない。
+- 読者は日本に行かない前提。宿泊割引・観光キャンペーン・地域限定イベントのような「現地にいないと意味がない」情報は主題にしない。
+  主題にするのは、海外でも意味がある話: 国際的な受賞、輸出・海外展開、造り手の物語と技術、新しい酒のスタイル、業界の変化、味わい方。
+- 秋田はたまに触れる程度でよい。無理に秋田に結びつけない。
+- 締めの段落は「ヨーロッパの読者がこの話をどう楽しめるか」（探し方・味わい方・注目点）にする。
 
 【書き方】
 - 読者はオランダ・ドイツ・スペイン・英語圏のヨーロッパ人。翻訳されることを前提に、固有名詞は初出でフルネーム、日本語特有の言い回しは避け、EUの読者が知らない前提（秋田の場所、特定名称酒の等級、精米歩合の意味など）は本文で短く補う。
@@ -33,9 +40,13 @@ JSONだけを返す（コードフェンス不要）:
   "slug_en":"kebab-case-english-slug-max-60-chars","tags":["英語タグ3〜6個"],
   "hero_prompt":"記事に合う写真の英語プロンプト（文字・ロゴ・人物の顔なし）"}}"""
 
-def generate(row, feedback=None, model="opus"):
+def generate(row, feedback=None, model="opus", extra=()):
+    """extra: 同じ出来事を報じる別記事（row と同型）。本文の材料と出典に加える。"""
     fb = f"\n【前回の差戻しコメント（必ず反映する）】\n{feedback}\n" if feedback else ""
-    p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
+    xs = ""
+    for x in extra:
+        xs += f"\n（関連記事）{x.get('source','')}「{x['title']}」 {x['url']}\n" + fetch_body(x["url"], 3000)
+    p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, extra_sources=xs, **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
     r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
     try: raw = json.loads(r.stdout).get("result", "")
     except Exception: raw = r.stdout
@@ -44,8 +55,10 @@ def generate(row, feedback=None, model="opus"):
     # 本文末尾に「## 参考・出典」を書いてしまうことがある → 本文からは外す（sources で持つ）
     gen["body_md"] = re.split(r"\n##\s*参考[・･]?出典.*", gen["body_md"], flags=re.S)[0].rstrip()
     # 出典は必ず元記事を含める
-    if not any(s.get("url") == row["url"] for s in gen.get("sources", [])):
-        gen.setdefault("sources", []).insert(0, {"name": row.get("source", ""), "title": row["title"], "url": row["url"]})
+    have = {s.get("url") for s in gen.get("sources", [])}
+    for x in [row] + list(extra):
+        if x["url"] not in have:
+            gen.setdefault("sources", []).append({"name": x.get("source", ""), "title": x["title"], "url": x["url"]})
     return gen
 
 def save(row, gen, slug=None, date=None):
@@ -60,5 +73,8 @@ def save(row, gen, slug=None, date=None):
 if __name__ == "__main__":
     news = json.load(open(sys.argv[1]))
     row = news["rows"][int(sys.argv[2]) if len(sys.argv) > 2 else 0]
-    slug, meta = save(row, generate(row))
+    extra = news.get("extra", [])
+    gen = generate(row, extra=extra)
+    slug, meta = save(row, gen); meta["extra"] = extra
+    json.dump(meta, open(os.path.join(HOME, "data", f"article_{slug}.json"), "w"), ensure_ascii=False, indent=1)
     print(slug)

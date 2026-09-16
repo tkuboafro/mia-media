@@ -86,9 +86,10 @@ def find_by_key(slug):
     r = api("POST", f"/data_sources/{DS}/query", {"filter": {"property": "記事キー", "rich_text": {"equals": slug}}, "page_size": 1})
     return (r.get("results") or [None])[0]
 
-def pending_pages():
+def pending_pages(include_waiting=False):
+    sts = ("承認", "差戻し", "見送り") + (("確認待ち",) if include_waiting else ())
     r = api("POST", f"/data_sources/{DS}/query", {"filter": {"and": [{"property": "チャネル", "select": {"equals": "Journal"}},
-            {"or": [{"property": "ステータス", "select": {"equals": s}} for s in ("承認", "差戻し", "見送り")]}]}, "page_size": 50})
+            {"or": [{"property": "ステータス", "select": {"equals": s}} for s in sts]}]}, "page_size": 50})
     return r.get("results", [])
 
 def prop_text(page, name):
