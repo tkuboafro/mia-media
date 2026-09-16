@@ -20,7 +20,7 @@ TPL = """（このボット内の以前のやり取りは無視して、今回�
 **日本語の一次情報**（蔵元・メーカーの公式発表、新聞・業界紙・自治体・コンテストの公式ページ）を Web 検索で探し、
 {n}件をJSONで出力してください。読者はヨーロッパ在住で日本に行かない人なので、**海外でも意味のある話**（国際コンクール受賞、輸出・海外展開、造り手や技術の話、新しいスタイル、業界の動き）を優先し、宿泊割引・観光キャンペーン・来店イベントのような現地限定の情報は除いてください。秋田県に関するものがあれば{akita}件程度含めてください。
 
-探す主なテーマ: 新商品・限定酒 / 受賞（IWC, Kura Master, 全国新酒鑑評会, SAKE COMPETITION など）/ 輸出・海外展開 / 蔵元の代替わり・新蔵・廃業 / 酒米・酒造好適米 / 酒蔵ツーリズム・イベント / 行政・税制 / 研究・技術
+探す主なテーマ: {theme}
 
 出力形式（この配列だけを返す。前置き・説明・コードフェンスは不要）:
 [{{"title":"記事の見出し（原文のまま）","url":"記事URL","source":"媒体名","published":"YYYY-MM-DD","summary_ja":"120字以内の要約","region":"都道府県名 or 全国","category":"新商品|受賞|輸出|蔵元|酒米|イベント|行政|研究|その他","akita":true/false,"why_eu":"EUの読者にとって面白い点を40字以内で"}}]
@@ -159,7 +159,9 @@ def verify(row):
     ok = toks and hit / len(toks) >= 0.4
     return ok, f"title-tokens {hit}/{len(toks)}"
 
-def main(n=15, akita=2, days=3):
+DEFAULT_THEME = "新商品・限定酒 / 受賞（IWC, Kura Master, 全国新酒鑑評会, SAKE COMPETITION など）/ 輸出・海外展開 / 蔵元の代替わり・新蔵・廃業 / 酒米・酒造好適米 / 研究・技術 / 業界の動き"
+
+def main(n=15, akita=2, days=3, theme=DEFAULT_THEME):
     seen = set(open(SEEN).read().split()) if os.path.exists(SEEN) else set()
     tab = pick_tab()
     if tab is None:
@@ -167,7 +169,7 @@ def main(n=15, akita=2, days=3):
     since = (dt.date.today() - dt.timedelta(days=days)).isoformat()
     br({"action": "goto", "tab": tab, "url": BOT_URL, "wait": 4000})
     base = body_len(tab)
-    r = send(tab, TPL.format(mark=MARK, since=since, n=n, akita=akita))
+    r = send(tab, TPL.format(mark=MARK, since=since, n=n, akita=akita, theme=theme))
     print(f"tab{tab} send={r} base={base}", flush=True)
     if not wait_done(tab, base):
         if capped(tab):
@@ -198,4 +200,6 @@ def main(n=15, akita=2, days=3):
     print(path)
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser(); ap.add_argument("--days", type=int, default=3); ap.add_argument("--n", type=int, default=15); ap.add_argument("--theme", default=DEFAULT_THEME)
+    a = ap.parse_args(); main(n=a.n, days=a.days, theme=a.theme)

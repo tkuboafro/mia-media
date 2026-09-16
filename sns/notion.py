@@ -37,11 +37,20 @@ def rt(text):
     """rich_text は 2000 字/要素の上限。長い段落は分ける。"""
     return [{"type": "text", "text": {"content": text[i:i + 1900]}} for i in range(0, max(1, len(text)), 1900)]
 
+SC = re.compile(r"^\[\[(youtube|image|x|instagram):([^\]]+)\]\]$")
+
 def md_to_blocks(md):
     out = []
     for para in re.split(r"\n\s*\n", md.strip()):
         p = para.strip()
         if not p: continue
+        m = SC.match(p)
+        if m:
+            kind, rest = m.group(1), m.group(2).split("|"); url = rest[0].strip()
+            if kind == "youtube": out.append({"object": "block", "type": "video", "video": {"type": "external", "external": {"url": url}}})
+            elif kind == "image": out.append({"object": "block", "type": "image", "image": {"type": "external", "external": {"url": url}, "caption": rt(" / ".join(x.strip() for x in rest[1:] if x.strip()))}})
+            else: out.append({"object": "block", "type": "bookmark", "bookmark": {"url": url}})
+            continue
         if p.startswith("## "): out.append({"object": "block", "type": "heading_2", "heading_2": {"rich_text": rt(p[3:].strip())}})
         elif p.startswith("> "): out.append({"object": "block", "type": "quote", "quote": {"rich_text": rt(p[2:].strip())}})
         else: out.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt(" ".join(l.strip() for l in p.splitlines()))}})
@@ -140,6 +149,16 @@ def read_ja(page_id):
         if t == "quote" and not out["lead"]: out["lead"] = txt(b).strip()
         elif t == "heading_2": out["body"].append("## " + txt(b).strip())
         elif t == "paragraph" and txt(b).strip(): out["body"].append(txt(b).strip())
+        elif t == "video":
+            u = (b["video"].get("external") or {}).get("url") or ""
+            if u: out["body"].append(f"[[youtube:{u}]]")
+        elif t == "image" and out["title"]:   # 見出しより前の画像はヒーロー
+            u = (b["image"].get("external") or {}).get("url") or (b["image"].get("file") or {}).get("url") or ""
+            cap = "".join(x.get("plain_text", "") for x in b["image"].get("caption", []))
+            if u: out["body"].append(f"[[image:{u}|{cap}]]")
+        elif t == "bookmark":
+            u = b["bookmark"].get("url") or ""
+            if u: out["body"].append(f"[[{'instagram' if 'instagram.com' in u else 'x'}:{u}]]")
     out["body_md"] = "\n\n".join(out.pop("body"))
     return out
 

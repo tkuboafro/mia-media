@@ -9,6 +9,29 @@ PUB = "https://sakewire.com"
 
 def fm_line(k, v): return f"{k}: {json.dumps(v, ensure_ascii=False)}"
 
+import re, html as _html
+def render_media(md):
+    """[[youtube:...]] などを埋め込み HTML に。YouTube は youtube-nocookie、X/Instagram は公式ウィジェット。"""
+    need = set()
+    def rep(m):
+        kind, rest = m.group(1), m.group(2).split("|"); url = _html.escape(rest[0].strip())
+        if kind == "youtube":
+            vid = re.search(r"(?:v=|youtu\.be/|embed/)([A-Za-z0-9_-]{11})", url)
+            if not vid: return ""
+            return f'<figure class="embed embed--video"><iframe src="https://www.youtube-nocookie.com/embed/{vid.group(1)}" title="YouTube video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></figure>'
+        if kind == "image":
+            cap = _html.escape(rest[1].strip()) if len(rest) > 1 else ""; cred = _html.escape(rest[2].strip()) if len(rest) > 2 else ""
+            return f'<figure class="embed embed--image"><img src="{url}" alt="{cap}" loading="lazy" /><figcaption>{cap}{(" — " + cred) if cred else ""}</figcaption></figure>'
+        if kind == "x":
+            need.add("x"); return f'<figure class="embed embed--social"><blockquote class="twitter-tweet"><a href="{url}">{url}</a></blockquote></figure>'
+        if kind == "instagram":
+            need.add("ig"); return f'<figure class="embed embed--social"><blockquote class="instagram-media" data-instgrm-permalink="{url}" data-instgrm-version="14"><a href="{url}">{url}</a></blockquote></figure>'
+        return ""
+    out = re.sub(r"^\[\[(youtube|image|x|instagram):([^\]]+)\]\]$", rep, md, flags=re.M)
+    if "x" in need: out += '\n\n<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>'
+    if "ig" in need: out += '\n\n<script async src="https://www.instagram.com/embed.js"></script>'
+    return out
+
 def write_md(L, slug, meta, title, description, body_md):
     row, ja = meta["row"], meta["ja"]
     fm = {"title": title, "description": description[:200], "pubDate": meta["date"], "lang": L, "story": slug,
@@ -18,7 +41,7 @@ def write_md(L, slug, meta, title, description, body_md):
     if meta.get("hero"): fm["hero"] = meta["hero"]; fm["heroAlt"] = meta.get("heroAlt") or ""; fm["heroCredit"] = meta.get("heroCredit") or ""
     d = os.path.join(SITE, "src", "content", "articles", L); os.makedirs(d, exist_ok=True)
     path = os.path.join(d, f"{slug}.md")
-    open(path, "w").write("---\n" + "\n".join(fm_line(k, v) for k, v in fm.items()) + "\n---\n\n" + body_md.strip() + "\n")
+    open(path, "w").write("---\n" + "\n".join(fm_line(k, v) for k, v in fm.items()) + "\n---\n\n" + render_media(body_md.strip()) + "\n")
     return path
 
 def run(*a, **k): return subprocess.run(a, capture_output=True, text=True, cwd=HOME, **k)
