@@ -76,6 +76,18 @@ def main():
                     post(CH, f"🐦 X に投稿しました: https://x.com/TheSakeWire/status/{tid}", ts)
                 except Exception as e:
                     post(CH, f"⚠️ X 投稿に失敗: {str(e)[:200]}", ts)
+                try:
+                    import ig_post
+                    meta = json.load(open(mp)); tr = (meta.get("translations") or {}).get("en") or {}
+                    img = meta.get("hero") or ""
+                    if img:
+                        if "cdn.shopify.com" in img: img = img.split("?")[0] + "?width=1080&height=1080&crop=center"
+                        cap = f"{tr.get('title') or meta['ja']['title']}\n\n{tr.get('description','')}\n\n{meta['ja']['title']}\n{meta['ja']['lead']}\n\nFull story on sakewire.com (link in bio)\n\n" + " ".join("#" + t.replace(" ", "") for t in (meta["ja"].get("tags") or [])[:6]) + " #sake #TheSakeWire\n\nDrink responsibly. 18+"
+                        mid, link = ig_post.post_image(img, cap[:2200])
+                        meta["ig_post"] = link; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
+                        post(CH, f"📸 Instagram に投稿しました: {link}", ts)
+                except Exception as e:
+                    post(CH, f"⚠️ Instagram 投稿に失敗: {str(e)[:200]}", ts)
             else:
                 notion.set_props(pid, status="承認")
                 post(CH, f"⚠️ 公開処理に失敗しました（再試行します）: {(r.stderr or r.stdout)[-300:]}", ts)
