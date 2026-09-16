@@ -6,3 +6,5 @@ logs/
 secrets.env
 __pycache__/
 .DS_Store
+data/sakestreet/
+data/kb.sqlite

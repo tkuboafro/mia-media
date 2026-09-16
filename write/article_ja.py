@@ -5,6 +5,7 @@
 import datetime as dt, json, os, re, subprocess, sys, unicodedata
 sys.path.insert(0, os.path.dirname(__file__))
 from article import fetch_body, pick_hero, slugify, HOME
+import kb
 
 PROMPT = """あなたは「The Sake Wire」（アムステルダムの日本酒輸入業者が運営する、EU向け日本のお酒メディア）の編集者です。
 以下の日本語の一次情報をもとに、**日本語で**1本の記事を書いてください。この日本語原稿が正本で、承認後に英・蘭・独・西へ翻訳して公開します。
@@ -46,7 +47,8 @@ def generate(row, feedback=None, model="opus", extra=()):
     xs = ""
     for x in extra:
         xs += f"\n（関連記事）{x.get('source','')}「{x['title']}」 {x['url']}\n" + fetch_body(x["url"], 3000)
-    p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, extra_sources=xs, **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
+    kbref = kb.as_prompt(kb.search(f"{row.get('title','')} {row.get('summary_ja','')}", "ja", 3))
+    p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, extra_sources=xs, kbref=kbref, **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
     r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
     try: raw = json.loads(r.stdout).get("result", "")
     except Exception: raw = r.stdout
