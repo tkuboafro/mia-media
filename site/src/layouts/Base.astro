@@ -86,7 +86,7 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
   </head>
   <body>
     <header class="top"><div class="wrap">
-      <a class="brand" href={`${base}/${lang}/`}>{SITE.name}<small>{SITE.tagline[lang]}</small></a>
+      <a class="brand" href={`${base}/${lang}/`}>{SITE.name}<small>{SITE.tagline[lang]} · by MADE IN AKITA, Amsterdam</small></a>
       <nav class="langs" aria-label="Language">
         {SITE.langs.map((l) => <a href={alternates[l] ?? `${base}/${l}/`} aria-current={l === lang ? "page" : undefined} hreflang={l}>{l.toUpperCase()}</a>)}
       </nav>

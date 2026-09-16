@@ -16,7 +16,7 @@ def main(meta_path):
         L = p.split("/articles/")[1].split("/")[0]
         t = open(p).read(); parts = t.split("---\n", 2)
         art[L] = {"fm": parts[1], "body": parts[2][:2500]}
-    base = "https://tkuboafro.github.io/mia-media"
+    base = "https://sakewire.com"
     url = f"{base}/en/{slug}/?utm_source=instagram&utm_medium=social&utm_campaign={slug}"
     r = subprocess.run(["claude", "-p", P.format(url=url, art=json.dumps(art, ensure_ascii=False)), "--output-format", "json", "--model", "sonnet", "--allowedTools", ""], capture_output=True, text=True, timeout=900)
     try: raw = json.loads(r.stdout).get("result", "")

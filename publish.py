@@ -5,7 +5,7 @@ import datetime as dt, json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "write"))
 from translate import translate
 HOME = os.path.dirname(os.path.abspath(__file__)); SITE = os.path.join(HOME, "site")
-PUB = "https://tkuboafro.github.io/mia-media"
+PUB = "https://sakewire.com"
 
 def fm_line(k, v): return f"{k}: {json.dumps(v, ensure_ascii=False)}"
 

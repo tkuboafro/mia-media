@@ -7,7 +7,7 @@ import json, os, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "write"))
 import notion
 from slack_post import post
-HOME = os.path.expanduser("~/mia-media"); PUB = "https://tkuboafro.github.io/mia-media"
+HOME = os.path.expanduser("~/mia-media"); PUB = "https://sakewire.com"
 CH = os.environ.get("MIA_SLACK_CHANNEL", "C0C27TW71SN")
 
 def slack_ts(page):

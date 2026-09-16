@@ -3,8 +3,8 @@ import sitemap from "@astrojs/sitemap";
 
 // ドメイン決定後: site を https://<domain> に、base を "/" に変える
 export default defineConfig({
-  site: "https://tkuboafro.github.io",
-  base: "/mia-media",
+  site: "https://sakewire.com",
+  base: "/",
   trailingSlash: "always",
   integrations: [sitemap()],
   i18n: {

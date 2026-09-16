@@ -23,7 +23,7 @@ TOK = _token()
 DS = "fb94f323-ceec-4ef9-93bd-96e2fde80ab8"          # data source (collection) id
 H = {"Authorization": f"Bearer {TOK}", "Notion-Version": "2025-09-03", "Content-Type": "application/json"}
 LANGS = ["en", "nl", "de", "es"]
-SITE = "https://tkuboafro.github.io/mia-media"
+SITE = "https://sakewire.com"
 
 def api(method, path, body=None):
     if not TOK: raise RuntimeError("NOTION_TOKEN missing — put it in ~/mia-media/secrets.env (integration 'MIA Journal')")
@@ -59,7 +59,7 @@ def ja_blocks(meta):
     for s_ in ja.get("sources", []):
         blocks.append({"object": "block", "type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [
             {"type": "text", "text": {"content": f"{s_.get('name','')}「{s_.get('title','')}」", "link": {"url": s_["url"]}}}]}})
-    blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt("本記事は上記の公開情報をもとに MADE IN AKITA Journal 編集部が要約・執筆したものです。画像は自社素材を使用しています。")}})
+    blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt("本記事は上記の公開情報をもとに The Sake Wire 編集部が要約・執筆したものです。画像は自社素材を使用しています。")}})
     return blocks
 
 def append_blocks(page_id, blocks):

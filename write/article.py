@@ -16,7 +16,7 @@ def region_en(r):
 
 HERO_POOL = json.load(open(os.path.join(HOME, "write", "hero_pool.json"))) if os.path.exists(os.path.join(HOME, "write", "hero_pool.json")) else {}
 
-PROMPT = """You are the editor of "MADE IN AKITA Journal", an online magazine for readers in the EU (Netherlands, Germany, Spain and English-speaking Europe) about Japanese sake, wine, beer and spirits, run by a small importer in Amsterdam (shop.made-in-akita.com) that specialises in Akita prefecture.
+PROMPT = """You are the editor of "The Sake Wire", an online magazine for readers in the EU (Netherlands, Germany, Spain and English-speaking Europe) about Japanese sake, wine, beer and spirits, run by a small importer in Amsterdam (shop.made-in-akita.com) that specialises in Akita prefecture.
 
 Write ONE story in FOUR languages (en, nl, de, es) based ONLY on this Japanese source. Do not invent facts, quotes, numbers or names that are not in the source; where EU readers need background (what a term means, where Akita is, how sake grades work), add it as clearly general explanation. Each language version is written natively for that audience — not a translation — but they must tell the same story.
 

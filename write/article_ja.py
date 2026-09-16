@@ -6,7 +6,7 @@ import datetime as dt, json, os, re, subprocess, sys, unicodedata
 sys.path.insert(0, os.path.dirname(__file__))
 from article import fetch_body, pick_hero, slugify, HOME
 
-PROMPT = """あなたは「MADE IN AKITA Journal」（アムステルダムの日本酒輸入業者が運営する、EU向け日本のお酒メディア）の編集者です。
+PROMPT = """あなたは「The Sake Wire」（アムステルダムの日本酒輸入業者が運営する、EU向け日本のお酒メディア）の編集者です。
 以下の日本語の一次情報をもとに、**日本語で**1本の記事を書いてください。この日本語原稿が正本で、承認後に英・蘭・独・西へ翻訳して公開します。
 
 【一次情報】{extra_sources}
