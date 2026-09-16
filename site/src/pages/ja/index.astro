@@ -74,6 +74,6 @@ const AKITA = [
 
   <section class="akita">
     <h2 class="sec-title">{m.akitaTitle} <span style="font-weight:400;color:var(--muted);font-size:.85rem;margin-left:8px">{m.akitaText}</span></h2>
-    <div class="tiles">{AKITA.map((t) => <a class="tile" href={`${SITE.producers}?utm_source=sakewire&utm_medium=producers&utm_campaign=home#${t.anchor}`} style={`background-image:url(${t.img})`}><span>{t.name}</span></a>)}</div>
+    <div class="tiles">{AKITA.map((t) => <a class="tile" href={`${base}/${lang}/breweries/#${t.anchor}`} style={`background-image:url(${t.img})`}><span>{t.name}</span></a>)}</div>
   </section>
 </Base>

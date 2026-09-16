@@ -1,0 +1,43 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Newsletter from "../../../components/Newsletter.astro";
+import { SITE, NAV, MOD } from "../../../config";
+import producers from "../../../data/producers.json";
+const lang = "nl" as const;
+const nav = NAV[lang]; const m = MOD[lang];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const alternates = Object.fromEntries(SITE.langs.map((l) => [l, `${base}/${l}/breweries/`]));
+const intro = { en: "The eleven producers behind MADE IN AKITA's bottles — small sake breweries, micro-wineries and a craft brewery in Akita, northern Japan.", nl: "De elf producenten achter de flessen van MADE IN AKITA — kleine sakebrouwerijen, microwijnhuizen en een craftbrouwerij in Akita, Noord-Japan.", de: "Die elf Produzenten hinter den Flaschen von MADE IN AKITA – kleine Sake-Brauereien, Mikro-Weingüter und eine Craft-Brauerei in Akita, Nordjapan.", es: "Los once productores detrás de las botellas de MADE IN AKITA: pequeñas bodegas de sake, microbodegas de vino y una cervecería artesanal en Akita, al norte de Japón.", ja: "MADE IN AKITA のボトルを醸す11の造り手。秋田の小さな酒蔵、マイクロワイナリー、クラフトブルワリー。" }[lang];
+const shopLabel = { en: "Bottles from this producer", nl: "Flessen van deze producent", de: "Flaschen dieses Produzenten", es: "Botellas de este productor", ja: "この蔵のボトルを見る" }[lang];
+const since = { en: "since", nl: "sinds", de: "seit", es: "desde", ja: "創業" }[lang];
+---
+<Base lang={lang} title={nav.breweries} description={intro} alternates={alternates}>
+  <h1>{nav.breweries}</h1>
+  <p class="lead" style="max-width:70ch">{intro}</p>
+  <div class="plist">
+    {producers.map((p) => (
+      <article class="pcardx" id={p.code}>
+        <a class="pcardx__img" href={p.collection + "?utm_source=sakewire&utm_medium=breweries&utm_campaign=" + p.code}><img src={p.image} alt={p.name} loading="lazy" /></a>
+        <div class="pcardx__body">
+          <div class="kicker"><span>{p.category}</span><span>{p.place}</span><span>{since} {p.founded}</span></div>
+          <h2>{lang === "ja" ? p.name_ja : p.name} <small>{lang === "ja" ? p.name : p.name_ja}</small></h2>
+          <p class="brand">{p.brand}</p>
+          <p>{lang === "ja" ? p.description_ja : p.description}</p>
+          <a class="btn2" href={p.collection + "?utm_source=sakewire&utm_medium=breweries&utm_campaign=" + p.code}>{shopLabel} →</a>
+        </div>
+      </article>
+    ))}
+  </div>
+  <div style="max-width:420px;margin-top:40px"><Newsletter lang={lang} /></div>
+</Base>
+<style is:global>
+  .plist { display:grid; gap:28px; margin-top:24px; }
+  .pcardx { display:grid; grid-template-columns: 360px 1fr; gap:24px; border-top:1px solid var(--line); padding-top:24px; scroll-margin-top: 90px; }
+  @media (max-width: 760px){ .pcardx { grid-template-columns:1fr; } }
+  .pcardx__img { display:block; aspect-ratio: 4/3; background:var(--grey); overflow:hidden; }
+  .pcardx__img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pcardx h2 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size:1.35rem; margin:0 0 2px; }
+  .pcardx h2 small { font-family: Inter, sans-serif; font-weight:400; color:var(--muted); font-size:.85rem; margin-left:8px; }
+  .pcardx .brand { color:var(--muted); font-size:.85rem; margin:0 0 10px; }
+  .pcardx p { max-width:70ch; }
+</style>

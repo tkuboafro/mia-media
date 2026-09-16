@@ -9,7 +9,7 @@ const ui = SITE.ui[lang];
 const GA = import.meta.env.PUBLIC_GA4_ID;
 const nav = NAV[lang];
 const path = Astro.url.pathname;
-const section = path.includes("/events") ? "events" : "news";
+const section = path.includes("/events") ? "events" : path.includes("/breweries") ? "breweries" : "news";
 const consent = { en: ["We use cookieless analytics to see which stories are read. Allow analytics cookies for better statistics?", "Allow", "No thanks"], nl: ["We meten anoniem welke verhalen gelezen worden. Analytische cookies toestaan voor betere statistieken?", "Toestaan", "Nee, bedankt"], de: ["Wir messen anonym, welche Beiträge gelesen werden. Analyse-Cookies für bessere Statistiken erlauben?", "Erlauben", "Nein, danke"], es: ["Medimos de forma anónima qué historias se leen. ¿Permitir cookies analíticas para mejores estadísticas?", "Permitir", "No, gracias"], ja: ["どの記事が読まれているかを匿名で計測しています。より正確な統計のため解析クッキーを許可しますか？", "許可する", "許可しない"] }[lang];
 const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/og-default.png`, Astro.site).toString();
 ---
@@ -154,11 +154,11 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
   </head>
   <body>
     <header class="top"><div class="wrap top__in">
-      <a class="brand" href={`${base}/${lang}/`}><span class="brand__name">{SITE.name}</span><small>{SITE.tagline[lang]}</small></a>
+      <a class="brand" href={`${base}/${lang}/`}><span class="brand__name">{SITE.name}</span></a>
       <nav class="mainnav" aria-label="Sections">
-        <a href={`${base}/${lang}/`} aria-current={section === "news" && !path.includes("/events") ? "page" : undefined}>{nav.news}</a>
+        <a href={`${base}/${lang}/`} aria-current={section === "news" ? "page" : undefined}>{nav.news}</a>
         <a href={`${base}/${lang}/events/`} aria-current={section === "events" ? "page" : undefined}>{nav.events}</a>
-        <a href={SITE.producers + "?utm_source=sakewire&utm_medium=nav&utm_campaign=breweries"}>{nav.breweries}</a>
+        <a href={`${base}/${lang}/breweries/`} aria-current={path.includes("/breweries") ? "page" : undefined}>{nav.breweries}</a>
         <a href={SITE.about + "?utm_source=sakewire&utm_medium=nav&utm_campaign=about"}>{nav.about}</a>
       </nav>
       <div class="top__right">
