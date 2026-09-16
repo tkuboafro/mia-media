@@ -11,8 +11,11 @@ CMD = os.path.expanduser("~/.local/share/danshiko/claude_browser/cmd.sh")
 HOME = os.path.expanduser("~/mia-media")
 SEEN = os.path.join(HOME, "data", "seen_urls.txt")
 MARK = "MIA-NEWS"
+# Grok Bot は通常チャットの週次上限に掛からない（2026-09-16 実測）。久保さん作成のボットで会話する。
+BOT_URL = os.environ.get("MIA_GROK_URL", "https://grok.com/bot/db26fca6-5bcb-44d3-b570-6a9e743785bb")
 
-TPL = """あなたは日本の酒類業界ニュースのリサーチャーです。会話タイトルは「{mark}」にしてください。
+TPL = """（このボット内の以前のやり取りは無視して、今回の依頼だけに答えてください）
+あなたは日本の酒類業界ニュースのリサーチャーです。会話タイトルは「{mark}」にしてください。
 {since}以降に公開された、日本のお酒（日本酒・焼酎・日本ワイン・クラフトビール・クラフトジン・ウイスキー・梅酒など）に関する
 **日本語の一次情報**（蔵元・メーカーの公式発表、新聞・業界紙・自治体・コンテストの公式ページ）を Web 検索で探し、
 {n}件をJSONで出力してください。**秋田県に関するものを優先して最低{akita}件**含めてください（秋田の蔵元・秋田県の施策・秋田の酒米・秋田のコンテスト受賞など）。
@@ -48,7 +51,10 @@ def tabs():
     return res
 
 def pick_tab():
-    """MIA の会話タブ → tab9 の grok ホーム → 新規タブ。10〜15 は xgrok の領域なので触らない。"""
+    """ボットのタブ → MIA の会話タブ → tab9 の grok ホーム → 新規タブ。10〜15 は xgrok の領域なので触らない。"""
+    for i, title, url in tabs():
+        if url.startswith(BOT_URL) and i not in range(10, 16):
+            return i
     for i, title, url in tabs():
         if "grok.com" in url and title.startswith(MARK) and i not in range(10, 16):
             return i
@@ -86,19 +92,29 @@ def capped(tab):
     t = body_text(tab)
     return bool(LIMIT_RE.search(t if isinstance(t, str) else ""))
 
-def wait_done(tab, base, max_s=480):
+MARKER = "published は記事の公開日（不明なら null）。"
+
+def answer_text(tab):
+    """ボットのスレッドは伸び続けるので、今回のプロンプト末尾（MARKER）より後ろだけを答えとして見る。
+    プロンプト自身にも JSON の雛形が入っているため、これをしないと雛形を答えと誤認する（2026-09-16 に踏んだ）。"""
+    t = body_text(tab)
+    if not isinstance(t, str): return ""
+    i = t.rfind(MARKER)
+    return t[i + len(MARKER):] if i >= 0 else ""
+
+def wait_done(tab, base, max_s=720):
+    """答えの中に JSON 配列が現れ、かつ本文が2回連続で変化しなくなったら完了。実測: ボットは検索込みで7〜8分。"""
     t0, prev, stab = time.time(), -1, 0
     while time.time() - t0 < max_s:
-        if int(time.time() - t0) % 24 < 8 and capped(tab):
+        if capped(tab):
             print("GROK_CAPPED", flush=True)
             return False
-        n = body_len(tab)
-        if n >= 0:
-            stab = stab + 1 if n == prev else 0
-            prev = n
-            if stab >= 3 and n > base + 800:
-                return True
-        time.sleep(8)
+        ans = answer_text(tab); n = len(ans)
+        stab = stab + 1 if n == prev else 0
+        prev = n
+        if stab >= 2 and re.search(r'\[\s*\{\s*"title"', ans):
+            return True
+        time.sleep(10)
     return False
 
 def parse(raw):
@@ -149,7 +165,7 @@ def main(n=15, akita=5, days=3):
     if tab is None:
         print("no tab"); sys.exit(1)
     since = (dt.date.today() - dt.timedelta(days=days)).isoformat()
-    br({"action": "goto", "tab": tab, "url": "https://grok.com/", "wait": 3000})
+    br({"action": "goto", "tab": tab, "url": BOT_URL, "wait": 4000})
     base = body_len(tab)
     r = send(tab, TPL.format(mark=MARK, since=since, n=n, akita=akita))
     print(f"tab{tab} send={r} base={base}", flush=True)
@@ -159,7 +175,7 @@ def main(n=15, akita=5, days=3):
             print("Grok weekly/daily limit reached — no collection today", flush=True)
             sys.exit(3)
         print("timeout waiting for Grok", flush=True)
-    rows = parse(body_text(tab))
+    rows = parse(answer_text(tab))
     out, dropped = [], []
     for row in rows:
         if row["url"] in seen:
