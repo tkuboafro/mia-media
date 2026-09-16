@@ -20,7 +20,7 @@ if [ "${KEPT:-0}" -lt 3 ]; then
 fi
 
 # ② 選定
-ROW=$($PY write/select.py $NEWS 2>>"$LOG")
+ROW=$($PY write/pick.py $NEWS 2>>"$LOG")
 if [ -z "$ROW" ] || [ "$ROW" = "null" ]; then echo "no candidate today" >> "$LOG"; exit 0; fi
 echo "$ROW" > data/today.json
 $PY -c "import json;json.dump({'rows':[json.load(open('data/today.json'))]},open('data/today_news.json','w'),ensure_ascii=False)"

@@ -17,11 +17,13 @@ def main(n=12, akita=4, days=3):
     except Exception:
         raw = r.stdout
     raw = re.sub(r"```(?:json)?", "", raw)
-    i = raw.find("[{"); j = raw.rfind("}]")
+    # 整形出力（"[\n  {"）でも拾えるように、最初の "[" から最後の "]" まで
+    i = raw.find("["); j = raw.rfind("]")
     rows = []
     if i >= 0 and j > i:
-        try: rows = json.loads(raw[i:j+2])
+        try: rows = json.loads(raw[i:j+1])
         except Exception as e: print("parse error", e); print(raw[:2000])
+    open(os.path.join(HOME, "logs", "claude_news_last_raw.txt"), "w").write(raw)
     seen = set(open(SEEN).read().split()) if os.path.exists(SEEN) else set()
     out, dropped = [], []
     for row in rows:

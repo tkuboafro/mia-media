@@ -8,13 +8,14 @@ const articles = defineCollection({
     description: z.string(),
     pubDate: z.coerce.date(),
     lang: z.enum(["en", "nl", "de", "es"]),
-    slug: z.string(),          // 言語をまたいで同じ記事を結ぶキー
+    story: z.string(),         // 言語をまたいで同じ記事を結ぶキー（`slug` は glob loader が id に使うので避ける）
     hero: z.string().optional(),
     heroAlt: z.string().optional(),
     sourceUrl: z.string().url(),
     sourceTitle: z.string(),
     sourceName: z.string(),
     region: z.string().optional(),
+    regionEn: z.string().optional(),
     category: z.string().optional(),
     akita: z.boolean().default(false),
     tags: z.array(z.string()).default([]),

@@ -92,7 +92,9 @@ def wait_done(tab, base, max_s=480):
     return False
 
 def parse(raw):
-    i = raw.rfind("[{")
+    i = raw.rfind("[\n{")
+    if i < 0: i = raw.rfind("[{")
+    if i < 0: i = raw.rfind("[\n  {")
     if i < 0:
         return []
     depth, j = 0, i

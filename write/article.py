@@ -8,6 +8,12 @@ import datetime as dt, json, os, re, subprocess, sys, unicodedata
 HOME = os.path.expanduser("~/mia-media")
 SITE = os.path.join(HOME, "site")
 LANGS = ["en", "nl", "de", "es"]
+PREF = {"北海道": "Hokkaido", "青森": "Aomori", "岩手": "Iwate", "宮城": "Miyagi", "秋田": "Akita", "山形": "Yamagata", "福島": "Fukushima", "茨城": "Ibaraki", "栃木": "Tochigi", "群馬": "Gunma", "埼玉": "Saitama", "千葉": "Chiba", "東京": "Tokyo", "神奈川": "Kanagawa", "新潟": "Niigata", "富山": "Toyama", "石川": "Ishikawa", "福井": "Fukui", "山梨": "Yamanashi", "長野": "Nagano", "岐阜": "Gifu", "静岡": "Shizuoka", "愛知": "Aichi", "三重": "Mie", "滋賀": "Shiga", "京都": "Kyoto", "大阪": "Osaka", "兵庫": "Hyogo", "奈良": "Nara", "和歌山": "Wakayama", "鳥取": "Tottori", "島根": "Shimane", "岡山": "Okayama", "広島": "Hiroshima", "山口": "Yamaguchi", "徳島": "Tokushima", "香川": "Kagawa", "愛媛": "Ehime", "高知": "Kochi", "福岡": "Fukuoka", "佐賀": "Saga", "長崎": "Nagasaki", "熊本": "Kumamoto", "大分": "Oita", "宮崎": "Miyazaki", "鹿児島": "Kagoshima", "沖縄": "Okinawa", "全国": "Japan"}
+def region_en(r):
+    for k,v in PREF.items():
+        if k in (r or ""): return v
+    return "Japan" if r else ""
+
 HERO_POOL = json.load(open(os.path.join(HOME, "write", "hero_pool.json"))) if os.path.exists(os.path.join(HOME, "write", "hero_pool.json")) else {}
 
 PROMPT = """You are the editor of "MADE IN AKITA Journal", an online magazine for readers in the EU (Netherlands, Germany, Spain and English-speaking Europe) about Japanese sake, wine, beer and spirits, run by a small importer in Amsterdam (shop.made-in-akita.com) that specialises in Akita prefecture.
@@ -87,9 +93,9 @@ def write_files(row, gen, date=None):
     for L in LANGS:
         a = gen["articles"][L]
         fm = {
-            "title": a["title"], "description": a["description"][:200], "pubDate": date.isoformat(), "lang": L, "slug": slug,
+            "title": a["title"], "description": a["description"][:200], "pubDate": date.isoformat(), "lang": L, "story": slug,
             "sourceUrl": row["url"], "sourceTitle": row["title"], "sourceName": row.get("source") or "",
-            "region": row.get("region") or "", "category": row.get("category") or "", "akita": bool(row.get("akita")),
+            "region": row.get("region") or "", "regionEn": region_en(row.get("region")), "category": row.get("category") or "", "akita": bool(row.get("akita")),
             "tags": gen.get("tags", []),
         }
         if hero: fm["hero"] = hero; fm["heroAlt"] = alt or ""

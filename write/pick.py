@@ -4,7 +4,7 @@ import json, sys, datetime as dt
 W = {"受賞": 3, "輸出": 3, "新商品": 2, "蔵元": 2, "酒米": 2, "イベント": 1, "行政": 1, "研究": 2, "その他": 0}
 def score(r):
     s = W.get(r.get("category") or "", 0)
-    if r.get("akita"): s += 5
+    if r.get("akita"): s += 6.5
     elif "秋田" in (r.get("region") or "") + (r.get("title") or ""): s += 4
     if r.get("published"):
         try:
@@ -18,6 +18,11 @@ if __name__ == "__main__":
     rows = []
     for p in sys.argv[1:]:
         rows += json.load(open(p))["rows"]
+    # 古いニュースは記事にしない（収集器が拾ってしまうことがある）
+    def fresh(r):
+        try: return (dt.date.today() - dt.date.fromisoformat((r.get("published") or "")[:10])).days <= 10
+        except Exception: return True
+    rows = [r for r in rows if fresh(r)]
     rows.sort(key=score, reverse=True)
     for r in rows[:5]: print(score(r), r.get("akita"), r.get("category"), (r.get("title") or "")[:50], file=sys.stderr)
     print(json.dumps(rows[0] if rows else None, ensure_ascii=False))

@@ -18,4 +18,16 @@ export const SITE = {
     es: { latest: "Lo último", source: "Fuente", readMore: "Leer más", shopCta: "Compra sake de Akita en la UE", akita: "Akita", allNews: "Todas las historias", published: "Publicado", drink: "Disfruta con responsabilidad. 18+ (20+ en SE/LT/JP)." },
   },
 };
+export const CATEGORY: Record<string, Record<string, string>> = {
+  "新商品": { en: "New release", nl: "Nieuw product", de: "Neuheit", es: "Novedad" },
+  "受賞": { en: "Awards", nl: "Onderscheiding", de: "Auszeichnung", es: "Premios" },
+  "輸出": { en: "Export", nl: "Export", de: "Export", es: "Exportación" },
+  "蔵元": { en: "Breweries", nl: "Brouwerijen", de: "Brauereien", es: "Bodegas" },
+  "酒米": { en: "Sake rice", nl: "Sakerijst", de: "Sake-Reis", es: "Arroz para sake" },
+  "イベント": { en: "Events", nl: "Evenementen", de: "Veranstaltungen", es: "Eventos" },
+  "行政": { en: "Policy", nl: "Beleid", de: "Politik", es: "Política" },
+  "研究": { en: "Research", nl: "Onderzoek", de: "Forschung", es: "Investigación" },
+  "その他": { en: "Stories", nl: "Verhalen", de: "Geschichten", es: "Historias" },
+};
+export const catLabel = (c: string | undefined, l: Lang) => (c && CATEGORY[c]?.[l]) || c || "";
 export type Lang = (typeof SITE.langs)[number];

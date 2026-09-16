@@ -8,12 +8,12 @@ const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "d
 <ul class="list">
   {articles.map((a) => (
     <li class="card">
-      <a class="thumb" href={`${base}/${lang}/${a.data.slug}/`} aria-hidden="true" tabindex="-1">{a.data.hero && <img src={a.data.hero} alt="" loading="lazy" />}</a>
+      <a class="thumb" href={`${base}/${lang}/${a.data.story}/`} aria-hidden="true" tabindex="-1">{a.data.hero && <img src={a.data.hero} alt="" loading="lazy" />}</a>
       <div>
-        <div class="meta" style="margin-bottom:6px">{a.data.akita && <span class="badge">{ui.akita}</span>}<span>{fmt(a.data.pubDate)}</span>{a.data.region && <span>{a.data.region}</span>}</div>
-        <h2><a href={`${base}/${lang}/${a.data.slug}/`}>{a.data.title}</a></h2>
+        <div class="meta" style="margin-bottom:6px">{a.data.akita && <span class="badge">{ui.akita}</span>}<span>{fmt(a.data.pubDate)}</span>{a.data.regionEn && <span>{a.data.regionEn}</span>}</div>
+        <h2><a href={`${base}/${lang}/${a.data.story}/`}>{a.data.title}</a></h2>
         <p>{a.data.description}</p>
-        <a href={`${base}/${lang}/${a.data.slug}/`}>{ui.readMore} →</a>
+        <a href={`${base}/${lang}/${a.data.story}/`}>{ui.readMore} →</a>
       </div>
     </li>
   ))}
