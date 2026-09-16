@@ -57,6 +57,8 @@ PYEOF
 PR_URL=$(gh pr create --title "Journal: $TITLE_EN" --body "$BODY" --base main --head "$BR" 2>>"$LOG")
 echo "PR: $PR_URL" >> "$LOG"
 git checkout -q main
+# 記事はブランチ側に居る。main の作業ツリーに残すと翌日の PR に混ざるので消す（マージ済みは tracked なので消えない）
+git clean -qfd site/src/content/articles sns_queue
 
 # ⑦ 久保さんへ通知（Slack Bot トークンがあれば DM、無ければ GitHub の PR 通知メールに任せる）
 if [ -n "${SLACK_BOT_TOKEN:-}" ] && [ -n "${SLACK_APPROVER_ID:-}" ]; then
