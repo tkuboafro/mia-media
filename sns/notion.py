@@ -11,13 +11,14 @@
 import json, os, re, sys, urllib.request
 
 def _token():
-    """MIA 専用の Notion 連携「MIA Journal」のシークレット。~/mia-media/secrets.env の NOTION_TOKEN（久保さんが置く）。
-    他案件（myfans）の ~/.config/danshiko/notion_token は使わない（2026-09-16 久保さん）。"""
+    """社内共通の Notion 連携（旧名 myfans_weekly_bot → 改名予定 Otacon）のシークレット ~/.config/danshiko/notion_token。
+    トークンは案件で分けない（2026-09-16 久保さん）。~/mia-media/secrets.env に NOTION_TOKEN があればそちらを優先。"""
     env = os.path.expanduser("~/mia-media/secrets.env")
     if os.path.exists(env):
         for line in open(env):
             if line.startswith("NOTION_TOKEN="): return line.split("=", 1)[1].strip().strip('"')
-    return os.environ.get("NOTION_TOKEN", "")
+    p = os.path.expanduser("~/.config/danshiko/notion_token")
+    return open(p).read().strip() if os.path.exists(p) else os.environ.get("NOTION_TOKEN", "")
 TOK = _token()
 DS = "fb94f323-ceec-4ef9-93bd-96e2fde80ab8"          # data source (collection) id
 H = {"Authorization": f"Bearer {TOK}", "Notion-Version": "2025-09-03", "Content-Type": "application/json"}
