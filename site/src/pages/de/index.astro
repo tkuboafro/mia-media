@@ -18,29 +18,28 @@ const picks = await weeklyPicks(week);
 const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang], { year: "numeric", month: "long", day: "numeric" });
 const href = (a: any) => `${base}/${lang}/${a.data.story}/`;
 const AKITA = [
-  { name: "Kikusui (Noshiro)", img: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-sake-01.jpg?width=800", href: SITE.producers + "#kks" },
-  { name: "Dewatsuru / Dewanofuji", img: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-sake-03.jpg?width=800", href: SITE.producers + "#sat" },
-  { name: "Akita craft beer & wine", img: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-beer-02.jpg?width=800", href: SITE.producers },
+  { name: "Kodama Jozo — Taiheizan", img: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-sake-01.jpg?width=800", href: `${SITE.shop}/collections/sake?filter.p.tag=Brewery:KDM` , anchor: "kdm" },
+  { name: "Sato Shuzoten — Dewanofuji", img: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-sake-03.jpg?width=800", href: `${SITE.shop}/collections/sake?filter.p.tag=Brewery:SAT`, anchor: "sat" },
+  { name: "Ogresse Quete — craft beer", img: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-beer-02.jpg?width=800", href: `${SITE.shop}/collections/craft-beer`, anchor: "ogresse" },
 ];
 ---
 <Base lang={lang} title={m.latest} description={SITE.tagline[lang]} alternates={alternates}>
   {lead && (
-    <section class="hero">
+    <section class={`home-hero${side.length ? "" : " home-hero--single"}`}>
       <a class="lead-story" href={href(lead)}>
         <span class="ph">{lead.data.hero && <img src={lead.data.hero} alt={lead.data.heroAlt ?? ""} />}</span>
         <span class="kicker">{lead.data.category && <span>{catLabel(lead.data.category, lang)}</span>}{lead.data.regionEn && <span>{lead.data.regionEn}</span>}<span>{fmt(lead.data.pubDate)}</span></span>
         <h2>{lead.data.title}</h2>
         <p>{lead.data.description}</p>
       </a>
-      <div class="side-stories">
+      {side.length > 0 && <div class="side-stories">
         {side.map((a) => (
           <a class="side-story" href={href(a)}>
             <span class="ph">{a.data.hero && <img src={a.data.hero} alt="" loading="lazy" />}</span>
             <span><span class="kicker">{a.data.category && <span>{catLabel(a.data.category, lang)}</span>}<span>{fmt(a.data.pubDate)}</span></span><h3>{a.data.title}</h3></span>
           </a>
         ))}
-        {side.length < 2 && <div class="side-story" aria-hidden="true"><span class="ph"></span><span><h3 style="color:var(--muted);font-weight:400">{m.eventsSoon}</h3></span></div>}
-      </div>
+      </div>}
     </section>
   )}
 
@@ -65,7 +64,7 @@ const AKITA = [
             </li>
           ))}
         </ul>
-      ) : <p style="color:var(--muted)">{m.eventsSoon}</p>}
+      ) : null}
     </section>
     <aside class="rail">
       <div><h3>{m.weekly}</h3><p class="sub">{m.weeklySub}</p><div class="stack">{picks.map((p) => <ProductCard p={p} lang={lang} utm={{ medium: "rail", campaign: "home", content: lang }} compact />)}</div></div>
@@ -75,6 +74,6 @@ const AKITA = [
 
   <section class="akita">
     <h2 class="sec-title">{m.akitaTitle} <span style="font-weight:400;color:var(--muted);font-size:.85rem;margin-left:8px">{m.akitaText}</span></h2>
-    <div class="tiles">{AKITA.map((t) => <a class="tile" href={t.href + (t.href.includes("?") ? "&" : "?") + "utm_source=sakewire&utm_medium=akita&utm_campaign=home"} style={`background-image:url(${t.img})`}><span>{t.name}</span></a>)}</div>
+    <div class="tiles">{AKITA.map((t) => <a class="tile" href={`${SITE.producers}?utm_source=sakewire&utm_medium=producers&utm_campaign=home#${t.anchor}`} style={`background-image:url(${t.img})`}><span>{t.name}</span></a>)}</div>
   </section>
 </Base>
