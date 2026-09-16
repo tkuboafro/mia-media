@@ -7,10 +7,12 @@ const articles = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.coerce.date(),
-    lang: z.enum(["en", "nl", "de", "es"]),
+    lang: z.enum(["en", "nl", "de", "es", "ja"]),
     story: z.string(),         // 言語をまたいで同じ記事を結ぶキー（`slug` は glob loader が id に使うので避ける）
     hero: z.string().optional(),
     heroAlt: z.string().optional(),
+    heroCredit: z.string().optional(),
+    sources: z.array(z.object({ name: z.string().optional(), title: z.string().optional(), url: z.string() })).default([]),
     sourceUrl: z.string().url(),
     sourceTitle: z.string(),
     sourceName: z.string(),

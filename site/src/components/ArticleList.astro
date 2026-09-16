@@ -3,7 +3,7 @@ import { SITE, type Lang } from "../config";
 const { articles, lang } = Astro.props as { articles: any[]; lang: Lang };
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ui = SITE.ui[lang];
-const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES" }[lang], { year: "numeric", month: "long", day: "numeric" });
+const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang], { year: "numeric", month: "long", day: "numeric" });
 ---
 <ul class="list">
   {articles.map((a) => (

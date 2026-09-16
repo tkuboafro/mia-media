@@ -6,5 +6,5 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 <meta http-equiv="refresh" content={`1; url=${base}/en/`} />
 <script is:inline define:vars={{ base }}>
   const l = (navigator.language || "en").slice(0, 2);
-  location.replace(base + "/" + (["nl", "de", "es"].includes(l) ? l : "en") + "/");
+  location.replace(base + "/" + (["nl", "de", "es", "ja"].includes(l) ? l : "en") + "/");
 </script></head><body><a href={`${base}/en/`}>English</a></body></html>

@@ -21,43 +21,11 @@ if [ -z "$ROW" ] || [ "$ROW" = "null" ]; then echo "no candidate today (backlog 
 echo "$ROW" > data/today.json
 $PY -c "import json;json.dump({'rows':[json.load(open('data/today.json'))]},open('data/today_news.json','w'),ensure_ascii=False)"
 
-# ③ 執筆（4言語）
-SLUG=$($PY write/article.py data/today_news.json 0 2>>"$LOG" | head -1)
+# ③ 日本語原稿を執筆（正本）
+SLUG=$($PY write/article_ja.py data/today_news.json 0 2>>"$LOG" | head -1)
 [ -z "$SLUG" ] && { echo "write failed" >> "$LOG"; exit 1; }
+echo "$($PY -c "import json;print(json.load(open('data/today.json'))['url'])")" >> data/used_urls.txt
 
-# ④ ビルド確認（壊れた記事を PR にしない）
-( cd site && npm run build >>"$LOG" 2>&1 ) || { echo "build failed, reverting" >> "$LOG"; git checkout -- site/src/content; exit 1; }
-
-echo "$(python3 -c "import json;print(json.load(open('data/today.json'))['url'])")" >> data/used_urls.txt
-
-# ⑤ SNS 下書き
-$PY sns/derive.py "data/article_$SLUG.json" >> "$LOG" 2>&1
-
-# ⑥ PR（久保さんがマージすると Pages が自動デプロイ）
-BR="article/$SLUG"
-git checkout -q -b "$BR"
-git add site/src/content/articles sns_queue
-TITLE_EN=$($PY -c "import re,sys;t=open('site/src/content/articles/en/$SLUG.md').read();print(re.search(r'^title: \"(.*)\"',t,re.M).group(1))")
-git commit -q -m "journal: $SLUG" -m "Auto-generated daily story. Merge = approve & publish." 
-git push -q -u origin "$BR"
-BODY=$($PY - "$SLUG" <<'PYEOF'
-import json,re,sys
-slug=sys.argv[1]; meta=json.load(open(f"data/article_{slug}.json")); r=meta["row"]
-out=[f"**Source:** [{r['title']}]({r['url']}) — {r.get('source','')} ({r.get('published','')})", "", f"**Region:** {r.get('region','')} · **Category:** {r.get('category','')} · **Akita:** {r.get('akita')}", "", "| lang | title | lead |","|---|---|---|"]
-for L in ("en","nl","de","es"):
-    t=open(f"site/src/content/articles/{L}/{slug}.md").read()
-    ti=re.search(r'^title: "(.*)"',t,re.M).group(1); d=re.search(r'^description: "(.*)"',t,re.M).group(1)
-    out.append(f"| {L} | {ti} | {d} |")
-out += ["", "Merge this PR to publish on all four language sites. Close it to skip the story.", "", f"SNS drafts: `sns_queue/{slug}.json`"]
-print("\n".join(out))
-PYEOF
-)
-PR_URL=$(gh pr create --title "Journal: $TITLE_EN" --body "$BODY" --base main --head "$BR" 2>>"$LOG")
-echo "PR: $PR_URL" >> "$LOG"
-git checkout -q main
-# 記事はブランチ側に居る。main の作業ツリーに残すと翌日の PR に混ざるので消す（マージ済みは tracked なので消えない）
-git clean -qfd site/src/content/articles sns_queue
-
-# ⑦ #biz-mia_media に Otacon としてレビュー依頼（✅/❌ は sns/approve_watch.py が15分毎に拾う）
-$PY sns/review_request.py "$SLUG" "$PR_URL" >> "$LOG" 2>&1
+# ④ Notion にページを作り、#biz-mia_media に Otacon からレビュー依頼（承認→翻訳→公開は sns/approve_watch.py）
+$PY sns/review_request.py "$SLUG" >> "$LOG" 2>&1
 echo "=== $(date '+%F %T') done $SLUG ===" >> "$LOG"

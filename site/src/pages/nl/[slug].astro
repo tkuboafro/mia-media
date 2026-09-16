@@ -13,16 +13,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siblings = await getCollection("articles", (x) => x.data.story === a.data.story);
 const alternates = Object.fromEntries(siblings.map((x) => [x.data.lang, `${base}/${x.data.lang}/${x.data.story}/`]));
 const ui = SITE.ui[lang];
-const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES" }[lang], { year: "numeric", month: "long", day: "numeric" });
+const fmt = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang], { year: "numeric", month: "long", day: "numeric" });
 ---
 <Base lang={lang} title={a.data.title} description={a.data.description} ogImage={a.data.hero} alternates={alternates} type="article">
   <article>
     <div class="meta">{a.data.akita && <span class="badge">{ui.akita}</span>}{a.data.category && <span>{catLabel(a.data.category, lang)}</span>}{a.data.regionEn && <span>{a.data.regionEn}</span>}<span>{ui.published} {fmt(a.data.pubDate)}</span></div>
     <h1>{a.data.title}</h1>
     <p class="lead">{a.data.description}</p>
-    {a.data.hero && <figure class="hero"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} /></figure>}
+    {a.data.hero && <figure class="hero"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} />{a.data.heroCredit && <figcaption>{a.data.heroCredit}</figcaption>}</figure>}
     <div class="body"><Content /></div>
-    <p class="source">{ui.source}: <a href={a.data.sourceUrl} rel="nofollow noopener" target="_blank">{a.data.sourceTitle}</a> — {a.data.sourceName}</p>
+    <div class="source sources">
+      <h2>{ui.sources}</h2>
+      <ul>{(a.data.sources.length ? a.data.sources : [{ name: a.data.sourceName, title: a.data.sourceTitle, url: a.data.sourceUrl }]).map((s) => <li><a href={s.url} rel="nofollow noopener" target="_blank">{s.name ? `${s.name}「${s.title ?? s.url}」` : (s.title ?? s.url)}</a></li>)}</ul>
+      <p>{ui.sourcesNote}</p>
+    </div>
     <div class="cta"><span>{SITE.tagline[lang]}</span><a class="btn" href={`${SITE.shop}/?utm_source=journal&utm_medium=article&utm_campaign=${a.data.story}&utm_content=${lang}`}>{ui.shopCta} →</a></div>
   </article>
 </Base>

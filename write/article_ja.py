@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""ニュース1件 → 日本語の完成原稿（Notion でレビューする正本）。`claude -p`。
+方針（久保さん 2026-09-16）: レビューは日本語で行う。外国語版は承認後に日本語から訳す。
+出典は必ず明記し、原文の丸写しはしない（要約と自分の言葉で書く）。画像は自社素材のみ使い、出典記事の画像は使わない。"""
+import datetime as dt, json, os, re, subprocess, sys, unicodedata
+sys.path.insert(0, os.path.dirname(__file__))
+from article import fetch_body, pick_hero, slugify, HOME
+
+PROMPT = """あなたは「MADE IN AKITA Journal」（アムステルダムの日本酒輸入業者が運営する、EU向け日本のお酒メディア）の編集者です。
+以下の日本語の一次情報をもとに、**日本語で**1本の記事を書いてください。この日本語原稿が正本で、承認後に英・蘭・独・西へ翻訳して公開します。
+
+【一次情報】
+見出し: {title}
+URL: {url}
+媒体: {source}
+公開日: {published}
+要約: {summary_ja}
+地域: {region} / 分類: {category} / 秋田: {akita}
+EU読者への切り口: {why_eu}
+{body}
+{feedback}
+
+【書き方】
+- 読者はオランダ・ドイツ・スペイン・英語圏のヨーロッパ人。翻訳されることを前提に、固有名詞は初出でフルネーム、日本語特有の言い回しは避け、EUの読者が知らない前提（秋田の場所、特定名称酒の等級、精米歩合の意味など）は本文で短く補う。
+- 一次情報に無い事実・数字・引用を作らない。原文の文章をそのまま写さない（要約し、自分の言葉で書く）。
+- 構成: リード1段落 → 見出し（##）2〜3本 → 締めにヨーロッパの読者向けの実用段落（どう楽しむか／どこに注目するか）。箇条書きは使わない。700〜1000字。
+- 「MADE IN AKITA」の商品に明確に関係する場合のみ1回だけ触れてよい（売り込みはしない）。「飲酒は20歳/18歳から」などの注意書きは書かない（サイト側で付く）。
+- 最後に「参考・出典」として、使った一次情報のURLを列挙する（本文中にURLは書かない）。
+
+JSONだけを返す（コードフェンス不要）:
+{{"title":"日本語の見出し（30字以内）","lead":"リード文（80字以内・1文）","body_md":"本文（Markdown。## 見出しと段落だけ）",
+  "sources":[{{"name":"媒体名","title":"記事見出し","url":"URL"}}],
+  "slug_en":"kebab-case-english-slug-max-60-chars","tags":["英語タグ3〜6個"],
+  "hero_prompt":"記事に合う写真の英語プロンプト（文字・ロゴ・人物の顔なし）"}}"""
+
+def generate(row, feedback=None, model="opus"):
+    fb = f"\n【前回の差戻しコメント（必ず反映する）】\n{feedback}\n" if feedback else ""
+    p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
+    r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
+    try: raw = json.loads(r.stdout).get("result", "")
+    except Exception: raw = r.stdout
+    raw = re.sub(r"^```(?:json)?|```$", "", raw.strip(), flags=re.M).strip()
+    gen = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
+    # 本文末尾に「## 参考・出典」を書いてしまうことがある → 本文からは外す（sources で持つ）
+    gen["body_md"] = re.split(r"\n##\s*参考[・･]?出典.*", gen["body_md"], flags=re.S)[0].rstrip()
+    # 出典は必ず元記事を含める
+    if not any(s.get("url") == row["url"] for s in gen.get("sources", [])):
+        gen.setdefault("sources", []).insert(0, {"name": row.get("source", ""), "title": row["title"], "url": row["url"]})
+    return gen
+
+def save(row, gen, slug=None, date=None):
+    date = date or dt.date.today()
+    slug = slug or f"{date:%Y-%m-%d}-{slugify(gen.get('slug_en') or gen['title'])}"
+    hero, alt = pick_hero(row)
+    meta = {"slug": slug, "date": date.isoformat(), "row": row, "ja": gen, "hero": hero, "heroAlt": alt,
+            "heroCredit": "Photo: MADE IN AKITA（自社素材）" if hero else None}
+    json.dump(meta, open(os.path.join(HOME, "data", f"article_{slug}.json"), "w"), ensure_ascii=False, indent=1)
+    return slug, meta
+
+if __name__ == "__main__":
+    news = json.load(open(sys.argv[1]))
+    row = news["rows"][int(sys.argv[2]) if len(sys.argv) > 2 else 0]
+    slug, meta = save(row, generate(row))
+    print(slug)
