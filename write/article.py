@@ -100,6 +100,7 @@ def write_files(row, gen, date=None):
         }
         if hero: fm["hero"] = hero; fm["heroAlt"] = alt or ""
         head = "---\n" + "\n".join(f"{k}: {json.dumps(v, ensure_ascii=False)}" for k, v in fm.items()) + "\n---\n\n"
+        os.makedirs(os.path.join(SITE, "src", "content", "articles", L), exist_ok=True)
         path = os.path.join(SITE, "src", "content", "articles", L, f"{slug}.md")
         open(path, "w").write(head + a["body_md"].strip() + "\n")
         paths.append(path)
