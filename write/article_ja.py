@@ -39,7 +39,7 @@ JSONだけを返す（コードフェンス不要）:
 {{"title":"日本語の見出し（30字以内）","lead":"リード文（80字以内・1文）","body_md":"本文（Markdown。## 見出しと段落だけ）",
   "sources":[{{"name":"媒体名","title":"記事見出し","url":"URL"}}],
   "slug_en":"kebab-case-english-slug-max-60-chars","tags":["英語タグ3〜6個"],
-  "hero_image":"ヒーローに使うプレスリリース画像のURL（リストの image から。無ければ null）","hero_caption":"ヒーロー画像のキャプション（日本語）",
+  "hero_media":ヒーローに使う image の番号（整数。無ければ null）,"hero_caption":"ヒーロー画像のキャプション（日本語）",
   "hero_prompt":"記事に合う写真の英語プロンプト（文字・ロゴ・人物の顔なし）"}}"""
 
 def generate(row, feedback=None, model="opus", extra=()):
@@ -60,15 +60,21 @@ def generate(row, feedback=None, model="opus", extra=()):
     gen = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
     # 本文末尾に「## 参考・出典」を書いてしまうことがある → 本文からは外す（sources で持つ）
     gen["body_md"] = re.split(r"\n##\s*参考[・･]?出典.*", gen["body_md"], flags=re.S)[0].rstrip()
-    # リストに無いメディアURLは捨てる（捏造防止）
-    allowed = {m["url"] for m in medias} | {m["url"].split("?")[0] for m in medias}
-    def keep(mt):
-        u = mt.group(2).split("|")[0].strip()
-        return mt.group(0) if (u in allowed or u.split("?")[0] in allowed) else ""
-    gen["body_md"] = re.sub(r"\[\[(youtube|image|x|instagram):([^\]]+)\]\]", keep, gen["body_md"])
+    # 番号参照 → 実URLのショートコードへ（モデルに長いURLを写させない）
+    def sub(mt):
+        try: m = medias[int(mt.group(1)) - 1]
+        except Exception: return ""
+        cap = (mt.group(2) or "").strip("| ").strip()
+        if m["type"] == "image": return f"[[image:{m['url']}|{cap}|{m.get('credit','')}]]"
+        if m["type"] in ("youtube", "x", "instagram"): return f"[[{m['type']}:{m['url']}]]"
+        return ""
+    gen["body_md"] = re.sub(r"\[\[media:(\d+)(\|[^\]]*)?\]\]", sub, gen["body_md"])
+    gen["body_md"] = re.sub(r"\[\[(youtube|image|x|instagram):(?!https?://)[^\]]*\]\]", "", gen["body_md"])
     gen["media"] = medias
-    hi = gen.get("hero_image")
-    if hi and not (hi in allowed or hi.split("?")[0] in allowed): gen["hero_image"] = None
+    hm = gen.get("hero_media"); gen["hero_image"] = None
+    try:
+        if hm is not None and medias[int(hm) - 1]["type"] == "image": gen["hero_image"] = medias[int(hm) - 1]["url"]
+    except Exception: pass
     # 出典は必ず元記事を含める
     have = {s.get("url") for s in gen.get("sources", [])}
     for x in [row] + list(extra):
