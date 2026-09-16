@@ -14,7 +14,12 @@ def slack_ts(page):
     return notion.prop_text(page, "Slackスレッド").strip() or None
 
 def main():
-    for page in notion.pending_pages():
+    try:
+        pages = notion.pending_pages()
+    except Exception as e:
+        # 統合（myfans_weekly_bot）が DB に接続されていないと 404。久保さんが Notion 側で「接続」を足すまで待つ
+        print("notion not reachable:", str(e)[:200]); return
+    for page in pages:
         slug = notion.prop_text(page, "記事キー").strip(); st = notion.prop_select(page, "ステータス"); pid = page["id"]
         mp = f"{HOME}/data/article_{slug}.json"
         if not slug or not os.path.exists(mp): print("skip (no meta)", slug, st); continue
