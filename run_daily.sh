@@ -10,18 +10,14 @@ cd "$H" || exit 1
 echo "=== $(date '+%F %T') start ===" >> "$LOG"
 git checkout -q main && git pull -q --ff-only
 
-# ① 収集
-NEWS=$($PY -u collect/grok_news.py 2>>"$LOG" | tail -1)
-KEPT=$($PY -c "import json,sys;print(len(json.load(open(sys.argv[1]))['rows']))" "$NEWS" 2>/dev/null || echo 0)
-if [ "${KEPT:-0}" -lt 3 ]; then
-  echo "grok kept=$KEPT → claude websearch fallback" >> "$LOG"
-  NEWS2=$($PY -u collect/claude_news.py 2>>"$LOG" | tail -1)
-  NEWS="$NEWS $NEWS2"
-fi
+# ① 収集（Grok 画面のみ。上限なら exit 3 → その日は収集なし。Claude 検索への代替はしない＝久保さん方針 2026-09-16）
+$PY -u collect/grok_news.py >> "$LOG" 2>&1
+RC=$?
+[ "$RC" = "3" ] && echo "grok capped — using backlog only" >> "$LOG"
 
-# ② 選定
-ROW=$($PY write/pick.py $NEWS 2>>"$LOG")
-if [ -z "$ROW" ] || [ "$ROW" = "null" ]; then echo "no candidate today" >> "$LOG"; exit 0; fi
+# ② 選定（バックログから未使用・10日以内の1件。無ければ今日は更新なし）
+ROW=$($PY write/pick.py 2>>"$LOG")
+if [ -z "$ROW" ] || [ "$ROW" = "null" ]; then echo "no candidate today (backlog empty)" >> "$LOG"; exit 0; fi
 echo "$ROW" > data/today.json
 $PY -c "import json;json.dump({'rows':[json.load(open('data/today.json'))]},open('data/today_news.json','w'),ensure_ascii=False)"
 
@@ -31,6 +27,8 @@ SLUG=$($PY write/article.py data/today_news.json 0 2>>"$LOG" | head -1)
 
 # ④ ビルド確認（壊れた記事を PR にしない）
 ( cd site && npm run build >>"$LOG" 2>&1 ) || { echo "build failed, reverting" >> "$LOG"; git checkout -- site/src/content; exit 1; }
+
+echo "$(python3 -c "import json;print(json.load(open('data/today.json'))['url'])")" >> data/used_urls.txt
 
 # ⑤ SNS 下書き
 $PY sns/derive.py "data/article_$SLUG.json" >> "$LOG" 2>&1

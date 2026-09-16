@@ -14,10 +14,26 @@ def score(r):
     s += min(2, len(r.get("why_eu") or "") // 15)
     if any(k in (r.get("source") or "") for k in ("公式", "酒造", "県", "新聞", "日経", "河北", "魁", "PR TIMES")): s += 1
     return s
+import os
+HOME = os.path.expanduser("~/mia-media")
+USED = os.path.join(HOME, "data", "used_urls.txt")
+
+def load_backlog():
+    p = os.path.join(HOME, "data", "backlog.jsonl")
+    if not os.path.exists(p): return []
+    rows, seen = [], set()
+    for line in open(p):
+        try: r = json.loads(line)
+        except Exception: continue
+        if r.get("url") and r["url"] not in seen:
+            seen.add(r["url"]); rows.append(r)
+    return rows
+
 if __name__ == "__main__":
-    rows = []
+    used = set(open(USED).read().split()) if os.path.exists(USED) else set()
+    rows = [r for r in load_backlog() if r["url"] not in used]
     for p in sys.argv[1:]:
-        rows += json.load(open(p))["rows"]
+        rows += [r for r in json.load(open(p))["rows"] if r["url"] not in used]
     # 古いニュースは記事にしない（収集器が拾ってしまうことがある）
     def fresh(r):
         try: return (dt.date.today() - dt.date.fromisoformat((r.get("published") or "")[:10])).days <= 10

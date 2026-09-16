@@ -1,8 +1,8 @@
 # MADE IN AKITA Journal — automated multilingual media
 
 Daily pipeline (Mac mini, launchd 05:30 Europe/Amsterdam):
-1. `collect/grok_news.py` — Japanese alcohol news via grok.com screen (resident browser). Falls back to `collect/claude_news.py` (Claude WebSearch) when Grok is capped.
-2. `write/select.py` — pick today's story (Akita weighted).
+1. `collect/grok_news.py` — Japanese alcohol news via grok.com screen (resident browser). Verified rows go to `data/backlog.jsonl`. When Grok is capped (weekly limit) nothing is collected that day — no other search engine is used.
+2. `write/pick.py` — pick today's story from the backlog (unused, ≤10 days old, Akita weighted). Empty backlog = no update that day.
 3. `write/article.py` — EN/NL/DE/ES articles via `claude -p` → `site/src/content/articles/<lang>/<slug>.md`.
 4. `site/` (Astro) build check.
 5. `sns/derive.py` — Instagram carousel + X drafts → `sns_queue/`.

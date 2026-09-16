@@ -79,9 +79,19 @@ def body_text(tab):
     except Exception:
         return out
 
+LIMIT_RE = re.compile(r"hit your (weekly|daily) limit|usage limit|Resets [A-Z][a-z]+ \d", re.I)
+
+def capped(tab):
+    """Grok の上限表示（"You've hit your weekly limit / Resets September 18"）が出ていれば True。"""
+    t = body_text(tab)
+    return bool(LIMIT_RE.search(t if isinstance(t, str) else ""))
+
 def wait_done(tab, base, max_s=480):
     t0, prev, stab = time.time(), -1, 0
     while time.time() - t0 < max_s:
+        if int(time.time() - t0) % 24 < 8 and capped(tab):
+            print("GROK_CAPPED", flush=True)
+            return False
         n = body_len(tab)
         if n >= 0:
             stab = stab + 1 if n == prev else 0
@@ -133,7 +143,7 @@ def verify(row):
     ok = toks and hit / len(toks) >= 0.4
     return ok, f"title-tokens {hit}/{len(toks)}"
 
-def main(n=12, akita=4, days=3):
+def main(n=15, akita=5, days=3):
     seen = set(open(SEEN).read().split()) if os.path.exists(SEEN) else set()
     tab = pick_tab()
     if tab is None:
@@ -144,6 +154,10 @@ def main(n=12, akita=4, days=3):
     r = send(tab, TPL.format(mark=MARK, since=since, n=n, akita=akita))
     print(f"tab{tab} send={r} base={base}", flush=True)
     if not wait_done(tab, base):
+        if capped(tab):
+            # 久保さん方針(2026-09-16): 上限に当たったら収集は止める。Claude 検索への代替はしない（トークンを使うため）。
+            print("Grok weekly/daily limit reached — no collection today", flush=True)
+            sys.exit(3)
         print("timeout waiting for Grok", flush=True)
     rows = parse(body_text(tab))
     out, dropped = [], []
@@ -157,6 +171,11 @@ def main(n=12, akita=4, days=3):
     json.dump({"collected_at": stamp, "rows": out}, open(path, "w"), ensure_ascii=False, indent=1)
     with open(SEEN, "a") as f:
         for r_ in out: f.write(r_["url"] + "\n")
+    # バックログに溜める。記事は1日1本なので、取れた日に多めに取っておけば上限の日も更新できる
+    with open(os.path.join(HOME, "data", "backlog.jsonl"), "a") as f:
+        for r_ in out:
+            r_["collected_at"] = stamp
+            f.write(json.dumps(r_, ensure_ascii=False) + "\n")
     print(f"grok rows={len(rows)} kept={len(out)} dropped={len(dropped)} -> {path}", flush=True)
     for d in dropped: print("  drop", d, flush=True)
     for r_ in out: print("  keep", r_.get("akita"), r_.get("region"), r_.get("title")[:60], flush=True)
