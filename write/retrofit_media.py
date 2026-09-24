@@ -31,6 +31,23 @@ MEDIA_LINE = re.compile(r"^\[\[(?:media|gen|image|youtube|x|instagram):[^\]]*\]\
 def text_only(md):
     return re.sub(r"\s+", "", MEDIA_LINE.sub("", md))
 
+def transplant(base, placed_md):
+    """モデル出力から「どの見出しの直後に何を置いたか」だけを取り出し、元の本文に差し込む（本文は一字も変えない）。"""
+    picks, cur = {}, None
+    for line in placed_md.splitlines():
+        h = re.match(r"^##\s*(.+?)\s*$", line)
+        if h: cur = re.sub(r"\s+", "", h.group(1)); continue
+        if cur is not None and MEDIA_LINE.match(line.strip()) and cur not in picks: picks[cur] = line.strip()
+    out = []
+    for line in base.splitlines():
+        out.append(line)
+        h = re.match(r"^##\s*(.+?)\s*$", line)
+        if h:
+            key = re.sub(r"\s+", "", h.group(1))
+            tag = picks.get(key) or next((v for k, v in picks.items() if k[:8] == key[:8]), None)
+            if tag: out.append(tag)
+    return "\n".join(out)
+
 def place_with_model(body, medias):
     p = PROMPT.format(body=body, media=mediamod.as_prompt(medias))
     r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", "sonnet", "--allowedTools", ""], capture_output=True, text=True, timeout=600)
@@ -49,13 +66,12 @@ def retrofit(page, fill=False):
     for k in ("title", "lead"):
         if now.get(k): ja[k] = now[k]
     if fill and ja.get("body_placed_raw"):
-        placed = {"body_md": ja["body_placed_raw"], **{k: ja.get(k) for k in ("hero_media", "hero_caption", "hero_prompt")}}
+        placed = {"body_md": transplant(base, ja["body_placed_raw"]), **{k: ja.get(k) for k in ("hero_media", "hero_caption", "hero_prompt")}}
         medias = ja.get("media", [])
     else:
         medias = mediamod.collect(meta["row"], article_ja.brand_terms(meta["row"]))
         placed = place_with_model(base, medias)
-        if text_only(placed["body_md"]) != text_only(base):
-            print(f"!! {slug}: モデルが本文を変えたので採用しない"); return
+        placed["body_md"] = transplant(base, placed["body_md"])  # モデルの本文は使わず、配置だけ元の本文へ移植する
     ja["body_placed_raw"] = placed["body_md"]
     ja.update({"body_md": placed["body_md"], "hero_media": placed.get("hero_media"), "hero_caption": placed.get("hero_caption") or "",
                "hero_prompt": placed.get("hero_prompt")})
