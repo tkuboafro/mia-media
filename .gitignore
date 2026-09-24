@@ -1,7 +1,7 @@
 node_modules/
 site/dist/
 site/.astro/
-data/
+/data/
 logs/
 secrets.env
 __pycache__/
