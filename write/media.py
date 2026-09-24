@@ -92,10 +92,11 @@ def collect(row, brand_terms=()):
     media = from_source(row["url"], row.get("source", ""))
     terms = [t for t in brand_terms if t] or []
     if terms:
-        q = f"{terms[0]} 日本酒" if row.get("category") != "その他" else terms[0]
-        for v in youtube_search(q, 3):
+        for v in youtube_search(terms[0], 6):
             url = f"https://www.youtube.com/watch?v={v['id']}"
             if any(m["url"] == url for m in media): continue
+            hay = f"{v.get('title','')} {v.get('channel','')}".lower()
+            if not any(t.lower() in hay for t in terms): continue  # 銘柄・蔵名が出てこない動画は無関係として捨てる
             official = any(t.lower() in (v.get("channel") or "").lower() for t in terms)
             media.append({"type": "youtube", "url": url, "title": v.get("title", ""), "credit": v.get("channel", ""), "official": official})
     # 実在確認（画像は HEAD、YouTube は oEmbed）

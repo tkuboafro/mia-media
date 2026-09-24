@@ -23,12 +23,14 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
     <link rel="canonical" href={canonical} />
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href, Astro.site)} />)}
     <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={og} />
     <meta property="og:locale" content={{ en: "en_GB", nl: "nl_NL", de: "de_DE", es: "es_ES", ja: "ja_JP" }[lang]} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@TheSakeWire" />
     <link rel="alternate" type="application/rss+xml" title={`${SITE.name} (${lang})`} href={`${base}/${lang}/rss.xml`} />
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
     {GA && <script is:inline define:vars={{ GA }}>

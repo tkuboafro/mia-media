@@ -13,9 +13,6 @@ category: "受賞"
 akita: false
 tags: ["IWC", "Champion Sake", "Yamaguchi", "Junmai Ginjo", "Summer Sake", "Awards"]
 sources: [{"name": "", "title": "KRY山口放送（日テレNEWS）「快挙！「日本酒界のオスカー」最高賞に下関・長州酒造「天美」」", "url": "https://news.ntv.co.jp/n/kry/category/society/kr28b1714e84464ae38f919e833dba035a"}, {"name": "", "title": "日本経済新聞「長州酒造、山口県知事にIWC最優秀賞を報告」", "url": "https://www.nikkei.com/article/DGXZQOCC1448K0U6A910C2000000/"}]
-hero: "https://cdn.shopify.com/s/files/1/0970/5203/3348/files/mia-sake-03.jpg?v=1789495118"
-heroAlt: "Sake brewing, Japan"
-heroCredit: "Photo: MADE IN AKITA（自社素材）"
 ---
 
 Photo: MADE IN AKITA (own material)
