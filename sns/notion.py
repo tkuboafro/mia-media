@@ -68,7 +68,7 @@ def ja_blocks(meta):
     for s_ in ja.get("sources", []):
         blocks.append({"object": "block", "type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [
             {"type": "text", "text": {"content": f"{s_.get('name','')}「{s_.get('title','')}」", "link": {"url": s_["url"]}}}]}})
-    blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt("本記事は上記の公開情報をもとに The Sake Wire 編集部が要約・執筆したものです。画像は自社素材を使用しています。")}})
+    blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt("本記事は上記の公開情報をもとに The Sake Wire 編集部が要約・執筆したものです。画像・動画の出典は各キャプションに記載しています（AI生成のイメージ画像はその旨を明記）。")}})
     return blocks
 
 def append_blocks(page_id, blocks):

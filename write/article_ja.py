@@ -56,6 +56,11 @@ JSONだけを返す（コードフェンス不要）:
   "hero_prompt":"hero_media が null の時だけ使う、記事に合う一般的な情景の英語プロンプト（実在の銘柄・ラベル・人物なし）"}}"""
 
 
+def brand_terms(row):
+    title = row.get("title") or ""
+    terms = re.findall(r"「([^」]{2,20})」", title) + re.findall(r"([一-龠ぁ-んァ-ンA-Za-z]{2,12}(?:酒造店|酒造|醸造|蒸溜所|蒸留所|ワイナリー|ブルワリー|酒造場))", title)
+    return terms[:3]
+
 MAX_GEN = 2
 
 def place_media(gen, medias):
@@ -100,9 +105,7 @@ def generate(row, feedback=None, model="opus", extra=()):
     for x in extra:
         xs += f"\n（関連記事）{x.get('source','')}「{x['title']}」 {x['url']}\n" + fetch_body(x["url"], 3000)
     kbref = kb.as_prompt(kb.search(f"{row.get('title','')} {row.get('summary_ja','')}", "ja", 3))
-    title = row.get("title") or ""
-    terms = re.findall(r"「([^」]{2,20})」", title) + re.findall(r"([一-龠ぁ-んァ-ンA-Za-z]{2,12}(?:酒造店|酒造|醸造|蒸溜所|蒸留所|ワイナリー|ブルワリー|酒造場))", title)
-    medias = mediamod.collect(row, terms[:3])
+    medias = mediamod.collect(row, brand_terms(row))
     p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, extra_sources=xs, kbref=kbref, media=mediamod.as_prompt(medias), **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
     r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
     try: raw = json.loads(r.stdout).get("result", "")
