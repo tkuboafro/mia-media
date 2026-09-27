@@ -32,7 +32,7 @@ const cta = { medium: "article_cta", campaign: a.data.story, content: lang };
       <div class="meta">{a.data.akita && <span class="badge">{ui.akita}</span>}{a.data.category && <span>{catLabel(a.data.category, lang)}</span>}{a.data.regionEn && <span>{a.data.regionEn}</span>}<span>{ui.published} {fmt(a.data.pubDate)}</span></div>
       <h1>{a.data.title}</h1>
       <p class="lead">{a.data.description}</p>
-      {a.data.hero && <figure class="hero" style="display:block"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} />{a.data.heroCredit && <figcaption>{a.data.heroCredit}</figcaption>}</figure>}
+      {a.data.hero && <figure class="hero" style="display:block;position:relative"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} />{a.data.heroCredit && (/AI生成|AI-generated|AI-gegenereerd|KI-generiert|generada con IA/.test(a.data.heroCredit) ? <span class="ai-badge" title={a.data.heroCredit}>AI</span> : <figcaption>{a.data.heroCredit}</figcaption>)}</figure>}
       <div class="body"><Content /></div>
       {products.length > 0 && (
         <aside class="taste"><h3>{m.taste}</h3><p class="sub">{m.tasteSub}</p><div class="grid2">{products.map((p) => <ProductCard p={p} lang={lang} utm={utm} />)}</div></aside>

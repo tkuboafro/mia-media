@@ -57,7 +57,10 @@ def md_to_blocks(md):
         if m:
             kind, rest = m.group(1), m.group(2).split("|"); url = rest[0].strip()
             if kind == "youtube": out.append({"object": "block", "type": "video", "video": {"type": "external", "external": {"url": url}}})
-            elif kind == "image": out.append({"object": "block", "type": "image", "image": {"type": "external", "external": {"url": url}, "caption": rt(" / ".join(x.strip() for x in rest[1:] if x.strip()))}})
+            elif kind == "image":
+                ai = any("AI生成" in x for x in rest[1:])  # 生成画像はキャプションを出さない（久保さん 2026-09-27）
+                cap = [] if ai else rt(" / ".join(x.strip() for x in rest[1:] if x.strip()))
+                out.append({"object": "block", "type": "image", "image": {"type": "external", "external": {"url": url}, "caption": cap}})
             else: out.append({"object": "block", "type": "bookmark", "bookmark": {"url": url}})
             continue
         if p.startswith("## "): out.append({"object": "block", "type": "heading_2", "heading_2": {"rich_text": rt(p[3:].strip())}})
@@ -69,7 +72,8 @@ def ja_blocks(meta):
     """日本語原稿ページの本文: 画像（自社素材＋クレジット） → # 見出し → > リード → 本文 → ## 参考・出典（箇条書きリンク）"""
     ja = meta["ja"]; blocks = []
     if meta.get("hero"):
-        blocks.append({"object": "block", "type": "image", "image": {"type": "external", "external": {"url": meta["hero"]}, "caption": rt(meta.get("heroCredit") or "")}})
+        hc = meta.get("heroCredit") or ""
+        blocks.append({"object": "block", "type": "image", "image": {"type": "external", "external": {"url": meta["hero"]}, "caption": [] if "AI生成" in hc else rt(hc)}})
     blocks.append({"object": "block", "type": "heading_1", "heading_1": {"rich_text": rt(ja["title"])}})
     blocks.append({"object": "block", "type": "quote", "quote": {"rich_text": rt(ja["lead"])}})
     blocks += md_to_blocks(ja["body_md"])

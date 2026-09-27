@@ -44,6 +44,8 @@ def render_media(md, L="ja"):
             return f'<figure class="embed embed--video"><iframe src="https://www.youtube-nocookie.com/embed/{vid.group(1)}" title="YouTube video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></figure>'
         if kind == "image":
             cap = _html.escape(rest[1].strip()) if len(rest) > 1 else ""; cred = _html.escape(local_credit(L, rest[2].strip())) if len(rest) > 2 else ""
+            if len(rest) > 2 and "AI生成" in rest[2]:
+                return f'<figure class="embed embed--image embed--ai"><img src="{url}" alt="{cap}" loading="lazy" /><span class="ai-badge" title="{cred}">AI</span></figure>'
             return f'<figure class="embed embed--image"><img src="{url}" alt="{cap}" loading="lazy" /><figcaption>{cap}{(" — " + cred) if cred else ""}</figcaption></figure>'
         if kind == "x":
             need.add("x"); return f'<figure class="embed embed--social"><blockquote class="twitter-tweet"><a href="{url}">{url}</a></blockquote></figure>'
