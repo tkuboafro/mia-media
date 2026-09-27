@@ -6,7 +6,7 @@
 import datetime as dt, json, os, re, subprocess, sys, unicodedata
 sys.path.insert(0, os.path.dirname(__file__))
 from article import fetch_body, slugify, HOME
-import kb, media as mediamod, genimg
+import kb, media as mediamod, genimg, stock
 
 PROMPT = """あなたは「The Sake Wire」（アムステルダムの日本酒輸入業者が運営する、EU向け日本のお酒メディア）の編集者です。
 以下の日本語の一次情報をもとに、**日本語で**1本の記事を書いてください。この日本語原稿が正本で、承認後に英・蘭・独・西へ翻訳して公開します。
@@ -36,10 +36,12 @@ EU読者への切り口: {why_eu}
   番号は上の【利用できるメディア】の番号。同じ番号は2回使わない。ヒーローに使った画像は本文で使わない。
 - 優先順位: 公式のプレス画像 → 公式のSNS投稿・公式YouTube → 内容が明確に一致する関連YouTube。銘柄名・蔵名が関係ない動画は使わない。
   "site" 種別（アカウントのトップページ等）は本文に置かない。
-- 合うメディアが無い見出しには、代わりに単独行で [[gen:英語の画像プロンプト|日本語キャプション]] を置く（AIで生成する）。
-  生成してよいのは一般的なもの（原料、酒器、グラス、飲み方、料理との組み合わせ、蔵や畑の一般的な情景）だけ。
-  実在の銘柄・ボトル・ラベル・人物・特定の建物や場所は生成しない。gen は本文全体で最大2つ。引用で足りるなら0でよい。
-  gen の英語プロンプトは名前ではなく見た目で書く（形・色・皮や表面の質感・大きさ・置き方）。例: "golden sweet potatoes" ではなく "elongated tubers with thin pale reddish skin, some broken open to show cream-yellow flesh"。
+- 合うメディアが無い見出しには、代わりに単独行で [[fill:英語の検索語|英語の画像プロンプト|日本語キャプション]] を置く。
+  システムがまずフリー素材の写真を検索語で探し、見つからない時だけ画像プロンプトでAI生成する。
+  検索語は写真サイトで通じる一般的な2〜4語（例: "sake brewery tanks", "rice paddy winter", "whisky casks warehouse"）。
+  描いてよい・探してよいのは一般的なもの（原料、酒器、グラス、飲み方、料理との組み合わせ、蔵や畑の一般的な情景）だけ。
+  実在の銘柄・ボトル・ラベル・人物・特定の建物や場所は対象にしない。fill は本文全体で最大2つ。引用で足りるなら0でよい。
+  画像プロンプトは名前ではなく見た目で書く（形・色・皮や表面の質感・大きさ・置き方）。例: "golden sweet potatoes" ではなく "elongated tubers with thin pale reddish skin, some broken open to show cream-yellow flesh"。
 - キャプションは写っているものを具体的に（例:「ISC 2026で金賞を受けた逢初」）。出典表記はシステムが付けるので書かない。
 
 【書き方】
@@ -54,7 +56,7 @@ JSONだけを返す（コードフェンス不要）:
   "sources":[{{"name":"媒体名","title":"記事見出し","url":"URL"}}],
   "slug_en":"kebab-case-english-slug-max-60-chars","tags":["英語タグ3〜6個"],
   "hero_media":ヒーローに使う image の番号（整数。無ければ null）,"hero_caption":"ヒーロー画像のキャプション（日本語）",
-  "hero_prompt":"hero_media が null の時だけ使う、記事に合う一般的な情景の英語プロンプト（実在の銘柄・ラベル・人物なし）"}}"""
+  "hero_query":"hero_media が null の時だけ使う、フリー素材を探す英語の検索語（2〜4語）","hero_prompt":"hero_media が null で素材も無い時だけ使う、記事に合う一般的な情景の英語プロンプト（実在の銘柄・ラベル・人物なし）"}}"""
 
 
 def brand_terms(row):
@@ -75,15 +77,26 @@ def place_media(gen, medias):
         return ""
     body = re.sub(r"\[\[media:(\d+)(\|[^\]]*)?\]\]", sub, gen["body_md"])
     n = 0
-    def gsub(mt):
+    def fill(query, prompt, cap):
+        """フリー素材 → 無ければ生成。上限 MAX_GEN。"""
         nonlocal n
-        prompt, _, cap = mt.group(1).partition("|")
         if n >= MAX_GEN: return ""
-        url = genimg.try_generate(prompt.strip())
-        if not url: return ""
-        n += 1
-        return f"[[image:{url}|{cap.strip()}|{genimg.CREDIT_JA}]]"
-    body = re.sub(r"\[\[gen:([^\]]+)\]\]", gsub, body)
+        desc = f"{cap} / {query or prompt}"
+        c = stock.pick(query, desc) if query else None
+        if c:
+            n += 1; return f"[[image:{c['url']}|{cap}|{c['credit']}]]"
+        for _ in range(2):  # 生成も検品し、落ちたら1回だけ作り直す
+            url = genimg.try_generate(prompt) if prompt else None
+            if not url: return ""
+            if stock.vet(url, desc):
+                n += 1; return f"[[image:{url}|{cap}|{genimg.CREDIT_JA}]]"
+        return ""
+    def fsub(mt):
+        parts = [x.strip() for x in mt.group(1).split("|")]
+        if len(parts) == 3: return fill(parts[0], parts[1], parts[2])
+        if len(parts) == 2: return fill("", parts[0], parts[1])  # 旧 [[gen:prompt|cap]]
+        return ""
+    body = re.sub(r"\[\[(?:fill|gen):([^\]]+)\]\]", fsub, body)
     body = re.sub(r"\[\[(youtube|image|x|instagram):(?!https?://)[^\]]*\]\]", "", body)
     body = re.sub(r"^(\[\[(?:image|youtube|x|instagram):[^\]]*\]\])\s*$", r"\n\1\n", body, flags=re.M)
     gen["body_md"] = re.sub(r"\n{3,}", "\n\n", body).strip()
@@ -95,9 +108,14 @@ def place_media(gen, medias):
             m = medias[int(hm) - 1]
             gen["hero_image"] = m["url"]; gen["hero_credit"] = m.get("credit") or "画像提供: プレスリリースより"
     except Exception: pass
+    hdesc = f"{gen.get('hero_caption') or ''} / {gen.get('hero_query') or gen.get('hero_prompt') or ''}"
+    if not gen["hero_image"] and gen.get("hero_query"):
+        c = stock.pick(gen["hero_query"], hdesc)
+        if c: gen["hero_image"] = c["url"]; gen["hero_credit"] = c["credit"]
     if not gen["hero_image"] and gen.get("hero_prompt"):
-        url = genimg.try_generate(gen["hero_prompt"])
-        if url: gen["hero_image"] = url; gen["hero_credit"] = genimg.CREDIT_JA
+        for _ in range(2):
+            url = genimg.try_generate(gen["hero_prompt"])
+            if url and stock.vet(url, hdesc): gen["hero_image"] = url; gen["hero_credit"] = genimg.CREDIT_JA; break
     return gen
 
 def generate(row, feedback=None, model="opus", extra=()):

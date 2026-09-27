@@ -43,7 +43,7 @@ def isolate_lines(md):
     """見出し行とメディア行を必ず独立した段落にする（直後に空行が無いと見出しに吸収される）。"""
     lines = []
     for line in md.strip().splitlines():
-        if line.startswith("## ") or SC.match(line.strip()) or re.match(r"^\[\[(?:media|gen):", line.strip()):
+        if line.startswith("## ") or SC.match(line.strip()) or re.match(r"^\[\[(?:media|gen|fill):", line.strip()):
             lines += ["", line.strip(), ""]
         else: lines.append(line)
     return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()

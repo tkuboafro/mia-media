@@ -13,11 +13,12 @@ PROMPT = """次の日本語記事の本文に、画像・動画を差し込む�
 【ルール】
 - 各「## 見出し」の直後に1行、その節に合うメディアを置く。書式は単独行で [[media:番号|日本語キャプション]]。同じ番号は2回使わない。
 - 優先順位: 公式のプレス画像 → 公式のSNS投稿・公式YouTube → 内容が明確に一致する関連YouTube。"site" 種別は置かない。
-- 合うメディアが無い見出しには単独行で [[gen:英語の画像プロンプト|日本語キャプション]] を置く（AI生成）。本文全体で最大2つ。
+- 合うメディアが無い見出しには単独行で [[fill:英語の検索語|英語の画像プロンプト|日本語キャプション]] を置く。本文全体で最大2つ。
+  システムがまずフリー素材を検索語で探し、無い時だけ画像プロンプトでAI生成する。検索語は写真サイトで通じる一般的な2〜4語（例: "sake brewery tanks", "rice paddy winter"）。
   生成してよいのは一般的なもの（原料、酒器、グラス、飲み方、料理、蔵や畑の一般的な情景）だけ。実在の銘柄・ボトル・ラベル・人物・特定の建物は不可。
-  gen の英語プロンプトは名前ではなく見た目で書く（形・色・皮や表面の質感・大きさ・置き方）。例: "golden sweet potatoes" ではなく "elongated tubers with thin pale reddish skin, some broken open to show cream-yellow flesh"。
+  画像プロンプトは名前ではなく見た目で書く（形・色・皮や表面の質感・大きさ・置き方）。例: "golden sweet potatoes" ではなく "elongated tubers with thin pale reddish skin, some broken open to show cream-yellow flesh"。
 - ヒーロー（記事冒頭の大きな画像）に使う image の番号を hero_media に。本文で使った番号はヒーローに使わない（逆も同じ）。
-  使える image が無ければ hero_media は null にして、hero_prompt に一般的な情景の英語プロンプトを書く。
+  使える image が無ければ hero_media は null にして、hero_query にフリー素材を探す英語の検索語（2〜4語）、hero_prompt に一般的な情景の英語プロンプトを書く。
 - キャプションは写っているものを具体的に。出典はシステムが付けるので書かない。
 
 【記事】
@@ -25,9 +26,9 @@ PROMPT = """次の日本語記事の本文に、画像・動画を差し込む�
 
 {media}
 
-JSONだけを返す: {{"body_md":"差し込み済みの本文","hero_media":番号またはnull,"hero_caption":"日本語","hero_prompt":"英語またはnull"}}"""
+JSONだけを返す: {{"body_md":"差し込み済みの本文","hero_media":番号またはnull,"hero_caption":"日本語","hero_query":"英語またはnull","hero_prompt":"英語またはnull"}}"""
 
-MEDIA_LINE = re.compile(r"^\[\[(?:media|gen|image|youtube|x|instagram):[^\]]*\]\]\s*$", re.M)
+MEDIA_LINE = re.compile(r"^\[\[(?:media|gen|fill|image|youtube|x|instagram):[^\]]*\]\]\s*$", re.M)
 
 def text_only(md):
     return re.sub(r"\s+", "", MEDIA_LINE.sub("", md))
@@ -67,7 +68,7 @@ def retrofit(page, fill=False):
     for k in ("title", "lead"):
         if now.get(k): ja[k] = now[k]
     if fill and ja.get("body_placed_raw"):
-        placed = {"body_md": transplant(base, ja["body_placed_raw"]), **{k: ja.get(k) for k in ("hero_media", "hero_caption", "hero_prompt")}}
+        placed = {"body_md": transplant(base, ja["body_placed_raw"]), **{k: ja.get(k) for k in ("hero_media", "hero_caption", "hero_query", "hero_prompt")}}
         medias = ja.get("media", [])
     else:
         medias = mediamod.collect(meta["row"], article_ja.brand_terms(meta["row"]))
@@ -75,14 +76,15 @@ def retrofit(page, fill=False):
         placed["body_md"] = transplant(base, placed["body_md"])  # モデルの本文は使わず、配置だけ元の本文へ移植する
     ja["body_placed_raw"] = placed["body_md"]
     ja.update({"body_md": placed["body_md"], "hero_media": placed.get("hero_media"), "hero_caption": placed.get("hero_caption") or "",
-               "hero_prompt": placed.get("hero_prompt")})
+               "hero_query": placed.get("hero_query"), "hero_prompt": placed.get("hero_prompt")})
     article_ja.place_media(ja, medias)
     meta["hero"], meta["heroAlt"], meta["heroCredit"] = ja.get("hero_image"), ja.get("hero_caption") or "", ja.get("hero_credit")
     json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
     notion.replace_body(page["id"], meta)
     n_img = len(re.findall(r"^\[\[(?:image|youtube|x|instagram):", ja["body_md"], re.M))
-    n_gen_wanted = len(re.findall(r"\[\[gen:", ja["body_placed_raw"]))
-    print(f"{slug}: 本文メディア {n_img} / 生成待ち {n_gen_wanted} / ヒーロー {'あり' if meta['hero'] else 'なし'}")
+    n_ai = len(re.findall(r"^\[\[image:[^\]]*AI生成", ja["body_md"], re.M)); n_stock = len(re.findall(r"^\[\[image:[^\]]*\|写真: ", ja["body_md"], re.M))
+    hero = "引用" if meta["hero"] and "AI生成" not in (meta["heroCredit"] or "") and "写真: " not in (meta["heroCredit"] or "") else ("素材" if meta["hero"] and "写真: " in (meta["heroCredit"] or "") else ("AI" if meta["hero"] else "なし"))
+    print(f"{slug}: 引用 {n_img - n_ai - n_stock} / 素材 {n_stock} / AI {n_ai} / ヒーロー {hero}")
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]; fill = "--fill" in sys.argv

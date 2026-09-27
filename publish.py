@@ -18,7 +18,10 @@ def local_credit(L, cred):
     ai, press = CREDIT_L[L]
     if "AI生成" in cred: return ai
     m = re.match(r"画像提供[:：]\s*(.+?)(?:（プレスリリースより）)?$", cred)
-    return press.format(m.group(1)) if m else cred
+    if m: return press.format(m.group(1))
+    m = re.match(r"写真[:：]\s*(.+)$", cred)
+    if m: return {"en": "Photo", "nl": "Foto", "de": "Foto", "es": "Foto"}[L] + ": " + m.group(1).replace("（", " (").replace("）", ")")
+    return cred
 
 FAL = re.compile(r"https://[a-z0-9.-]*fal\.(?:media|ai|run)/[^\s|\]\"]+")
 def rehost_generated(slug, meta):
