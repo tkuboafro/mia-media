@@ -5,7 +5,7 @@
 import json, os, sys, time, urllib.request, urllib.error
 
 HOME = os.path.expanduser("~/mia-media")
-MODEL = os.environ.get("FAL_IMAGE_MODEL", "fal-ai/flux-pro/v1.1")  # 約 $0.04/枚
+MODEL = os.environ.get("FAL_IMAGE_MODEL", "fal-ai/flux/dev")  # 約 $0.025/枚。2026-09-27 A/B で pro より形が正確だった
 CREDIT_JA = "イメージ画像（AI生成）"
 GUARD = ("editorial photograph, natural light, shallow depth of field, no text, no letters, no logos, "
          "no labels, no brand names, no recognizable people, no faces")
