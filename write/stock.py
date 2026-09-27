@@ -72,18 +72,23 @@ def search(q, n=6):
     scored.sort(key=lambda x: x[:3])
     return [x[3] for x in scored[:n]]
 
-VET_PROMPT = ('Read the image file {path} and judge it as an editorial illustration for a Japanese drinks news article, intended to show: "{desc}". '
-              'Answer ONLY JSON: {{"ok": true|false, "reason": "<10 words"}}. ok=false if the scene clearly is not Japan (when the subject is place-specific), '
-              'or it shows readable text, brand labels or logos, or a recognizable face is prominent, or the subject does not match, or it looks obviously fake/AI-artifacted.')
+VET_MODEL = os.environ.get("VET_MODEL", "opus")  # 久保さん 2026-09-27: 検品は Opus で
+VET_PROMPT = ('You are the photo editor of The Sake Wire, a serious European news site about Japanese sake, shochu, wine and beer. '
+              'Read the image file {path}. It is proposed as an editorial illustration meant to show: "{desc}".\n'
+              'Reject (ok=false) if ANY of these apply: the subject does not match the intent; the scene is clearly not Japan when the intent is place-specific '
+              '(a rice field, brewery, town, festival); readable text, brand names, labels or logos are visible; a person\'s face is prominent; '
+              'the image looks AI-generated or has artifacts (wrong anatomy, melted objects, nonsense writing); it is a low-quality snapshot, watermark, collage or screenshot; '
+              'it would mislead readers about the story (e.g. a wine cellar for a sake story, a Scottish castle for a Japanese distillery).\n'
+              'Accept only a photo you would actually run in a printed magazine. Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
 
 def vet(url, desc):
-    """Haiku に画像を見せて可否を判定（数秒・少トークン）。判定不能なら False（安全側）。"""
+    """Opus に画像を見せて可否を判定。判定不能なら False（安全側）。"""
     import subprocess, tempfile
     try:
         fd, path = tempfile.mkstemp(suffix=".jpg"); os.close(fd)
         urllib.request.urlretrieve(url, path)
-        r = subprocess.run(["claude", "-p", VET_PROMPT.format(path=path, desc=desc), "--model", "haiku", "--allowedTools", "Read", "--output-format", "json"],
-                           capture_output=True, text=True, timeout=120)
+        r = subprocess.run(["claude", "-p", VET_PROMPT.format(path=path, desc=desc), "--model", VET_MODEL, "--allowedTools", "Read", "--output-format", "json"],
+                           capture_output=True, text=True, timeout=300)
         raw = json.loads(r.stdout).get("result", ""); j = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
         if not j.get("ok"): print(f"[vet] NG {url[:60]}: {j.get('reason')}", file=sys.stderr)
         return bool(j.get("ok"))
