@@ -85,7 +85,8 @@ def place_media(gen, medias):
         return f"[[image:{url}|{cap.strip()}|{genimg.CREDIT_JA}]]"
     body = re.sub(r"\[\[gen:([^\]]+)\]\]", gsub, body)
     body = re.sub(r"\[\[(youtube|image|x|instagram):(?!https?://)[^\]]*\]\]", "", body)
-    gen["body_md"] = re.sub(r"\n{3,}", "\n\n", body)
+    body = re.sub(r"^(\[\[(?:image|youtube|x|instagram):[^\]]*\]\])\s*$", r"\n\1\n", body, flags=re.M)
+    gen["body_md"] = re.sub(r"\n{3,}", "\n\n", body).strip()
     gen["media"] = medias
     gen["hero_image"] = None; gen["hero_credit"] = None
     try:
