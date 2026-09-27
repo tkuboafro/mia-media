@@ -58,6 +58,7 @@ def place_with_model(body, medias):
     return json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
 
 def retrofit(page, fill=False):
+    import time as _t; t0 = _t.time()
     slug = notion.prop_text(page, "記事キー")
     mp = os.path.join(HOME, "data", f"article_{slug}.json")
     if not os.path.exists(mp): print(f"skip {slug}: no meta"); return
@@ -84,7 +85,7 @@ def retrofit(page, fill=False):
     n_img = len(re.findall(r"^\[\[(?:image|youtube|x|instagram):", ja["body_md"], re.M))
     n_ai = len(re.findall(r"^\[\[image:[^\]]*AI生成", ja["body_md"], re.M)); n_stock = len(re.findall(r"^\[\[image:[^\]]*\|写真: ", ja["body_md"], re.M))
     hero = "引用" if meta["hero"] and "AI生成" not in (meta["heroCredit"] or "") and "写真: " not in (meta["heroCredit"] or "") else ("素材" if meta["hero"] and "写真: " in (meta["heroCredit"] or "") else ("AI" if meta["hero"] else "なし"))
-    print(f"{slug}: 引用 {n_img - n_ai - n_stock} / 素材 {n_stock} / AI {n_ai} / ヒーロー {hero}")
+    print(f"{slug}: 引用 {n_img - n_ai - n_stock} / 素材 {n_stock} / AI {n_ai} / ヒーロー {hero} ({int(_t.time()-t0)}s)", flush=True)
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]; fill = "--fill" in sys.argv

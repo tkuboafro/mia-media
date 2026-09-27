@@ -86,7 +86,10 @@ def vet(url, desc):
     import subprocess, tempfile
     try:
         fd, path = tempfile.mkstemp(suffix=".jpg"); os.close(fd)
-        urllib.request.urlretrieve(url, path)
+        if url.startswith("file://"): path = url[7:]
+        else:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh) sakewire/1.0 (editorial; tkubo@danshiko.com)"})  # Wikimedia は UA 必須
+            with urllib.request.urlopen(req, timeout=60) as r, open(path, "wb") as f: f.write(r.read())
         r = subprocess.run(["claude", "-p", VET_PROMPT.format(path=path, desc=desc), "--model", VET_MODEL, "--allowedTools", "Read", "--output-format", "json"],
                            capture_output=True, text=True, timeout=300)
         raw = json.loads(r.stdout).get("result", ""); j = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
@@ -95,8 +98,9 @@ def vet(url, desc):
     except Exception as e:
         print(f"[vet] error: {e}", file=sys.stderr); return False
     finally:
-        try: os.remove(path)
-        except Exception: pass
+        if not url.startswith("file://"):
+            try: os.remove(path)
+            except Exception: pass
 
 def pick(q, desc=None, n=3):
     """検索語で探し、上位 n 件を順に検品して最初に通ったものを返す。desc: 何を見せたいか（日本語可）。"""
