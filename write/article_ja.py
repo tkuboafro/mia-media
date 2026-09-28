@@ -127,6 +127,7 @@ def generate(row, feedback=None, model="opus", extra=()):
     kbref = kb.as_prompt(kb.search(f"{row.get('title','')} {row.get('summary_ja','')}", "ja", 3))
     medias = mediamod.collect(row, brand_terms(row))
     p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, extra_sources=xs, kbref=kbref, media=mediamod.as_prompt(medias), **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
+    p = "".join(ch for ch in p if ch in "\n\t" or ord(ch) >= 32)  # kb/メディア由来の NUL・制御文字で subprocess が落ちるのを防ぐ
     r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
     try: raw = json.loads(r.stdout).get("result", "")
     except Exception: raw = r.stdout
