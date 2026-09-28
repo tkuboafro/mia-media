@@ -14,7 +14,7 @@ MIA_WINDOWS='"2026-04-30 30" "2026-05-31 31" "2026-06-30 30"' SKIP_WRITE=1 bash 
   "ジャパニーズウイスキー・クラフトジン・日本ワイン・クラフトビール・本格焼酎（新蒸留所やワイナリー、国際的な受賞、輸出、新しいスタイル）"
   "業界と制度（GI 地理的表示、酒税、ユネスコ無形文化遺産『伝統的酒造り』、インバウンド免税、後継者問題、輸出統計、海外の日本酒ブーム）と、秋田県の酒蔵・ワイナリー・ブルワリーの動き"
   )
-  for W in "${WINDOWS[@]}"; do set -- $W; U=$1; D=$2
+  for W in "${WINDOWS[@]}"; do read -r U D <<< "$W"
     for T in "${THEMES[@]}"; do
       $PY -u collect/grok_news.py --until "$U" --days "$D" --n 15 --theme "$T" >> "$LOG" 2>&1
       echo "$(date "+%H:%M") collected (until $U): $(wc -l < data/backlog.jsonl) rows" | tee -a "$LOG" >> "$HOME/mia-media/logs/run_to_100.log"

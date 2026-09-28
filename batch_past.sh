@@ -13,7 +13,7 @@ THEMES=(
 "業界と制度（GI 地理的表示、酒税改正、ユネスコ無形文化遺産『伝統的酒造り』、インバウンド免税、後継者問題、輸出統計）と、秋田県の酒蔵・ワイナリー・ブルワリーの動き"
 )
 if [ "${SKIP_COLLECT:-0}" != "1" ]; then
-for W in "${WINDOWS[@]}"; do set -- $W; U=$1; D=$2
+for W in "${WINDOWS[@]}"; do read -r U D <<< "$W"
   for T in "${THEMES[@]}"; do
     $PY -u collect/grok_news.py --until "$U" --days "$D" --n 15 --theme "$T" >> "$LOG" 2>&1
     echo "$(date '+%H:%M') collected (until $U): $(wc -l < data/backlog.jsonl) rows" | tee -a "$LOG"
@@ -21,7 +21,7 @@ for W in "${WINDOWS[@]}"; do set -- $W; U=$1; D=$2
 done
 fi
 echo "CANDIDATES: $($PY -c "import sys;sys.path.insert(0,'write');import pick;print(len(pick.ranked()))" 2>>"$LOG")" | tee -a "$LOG"
-N=${1:-30}
+N=${N_ARTICLES:-${1:-30}}
 for i in $(seq 1 $N); do
   ROW=$($PY write/pick.py 2>>"$LOG")
   [ -z "$ROW" ] || [ "$ROW" = "null" ] && { echo "no more candidates" | tee -a "$LOG"; break; }
