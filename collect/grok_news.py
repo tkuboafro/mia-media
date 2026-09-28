@@ -14,13 +14,15 @@ MARK = "MIA-NEWS"
 # Grok Bot は通常チャットの週次上限に掛からない（2026-09-16 実測）。久保さん作成のボットで会話する。
 BOT_URL = os.environ.get("MIA_GROK_URL", "https://grok.com/bot/db26fca6-5bcb-44d3-b570-6a9e743785bb")
 
-TPL = """（このボット内の以前のやり取りは無視して、今回の依頼だけに答えてください）
+TPL = """依頼ID: {nonce}（このボット内の以前のやり取りは無視して、今回の依頼だけに答えてください）
 あなたは日本の酒類業界ニュースのリサーチャーです。会話タイトルは「{mark}」にしてください。
-{since}以降に公開された、日本のお酒（日本酒・焼酎・日本ワイン・クラフトビール・クラフトジン・ウイスキー・梅酒など）に関する
+{since}から{until}までの間に公開された、日本のお酒（日本酒・焼酎・日本ワイン・クラフトビール・クラフトジン・ウイスキー・梅酒など）に関する
 **日本語の一次情報**（蔵元・メーカーの公式発表、新聞・業界紙・自治体・コンテストの公式ページ）を Web 検索で探し、
 {n}件をJSONで出力してください。読者はヨーロッパ在住で日本に行かない人なので、**海外でも意味のある話**（国際コンクール受賞、輸出・海外展開、造り手や技術の話、新しいスタイル、業界の動き）を優先し、宿泊割引・観光キャンペーン・来店イベントのような現地限定の情報は除いてください。秋田県に関するものがあれば{akita}件程度含めてください。
 
 探す主なテーマ: {theme}
+{exclude}
+必ず今回あらためて Web 検索してください（記憶や以前の回答の使い回しは不可）。published が {since}〜{until} の範囲外のものは含めないでください。
 
 出力形式（この配列だけを返す。前置き・説明・コードフェンスは不要）:
 [{{"title":"記事の見出し（原文のまま）","url":"記事URL","source":"媒体名","published":"YYYY-MM-DD","summary_ja":"120字以内の要約","region":"都道府県名 or 全国","category":"新商品|受賞|輸出|蔵元|酒米|イベント|行政|研究|その他","akita":true/false,"why_eu":"EUの読者にとって面白い点を40字以内で"}}]
@@ -65,14 +67,30 @@ def pick_tab():
     t = tabs()
     return t[-1][0] if t else None
 
-def send(tab, prompt):
+def new_chat(tab):
+    """スレッドが伸び続けると古い答えを拾うので、毎回 New chat から始める。"""
+    js(tab, "(()=>{const b=Array.from(document.querySelectorAll('a,button')).find(e=>/^new chat$/i.test((e.getAttribute('aria-label')||e.innerText||'').trim()));if(b){b.click();return 'new';}return 'none';})()")
+    time.sleep(2)
+
+def send(tab, prompt, nonce):
     b64 = base64.b64encode(prompt.encode()).decode()
-    js(tab, "(()=>{const t=decodeURIComponent(escape(atob('" + b64 + "')));"
-            "const el=document.querySelector('.ProseMirror[contenteditable=true]');"
-            "if(!el)return 'nc';el.focus();document.execCommand('selectAll',false,null);"
-            "document.execCommand('insertText',false,t);return el.innerText.length;})()")
-    return js(tab, "(()=>{const s=Array.from(document.querySelectorAll('button')).find(e=>e.type==='submit');"
-                   "if(s){s.click();return 'sent';} return 'ng';})()")
+    for attempt in range(3):
+        js(tab, "(()=>{const t=decodeURIComponent(escape(atob('" + b64 + "')));"
+                "const el=document.querySelector('.ProseMirror[contenteditable=true]');"
+                "if(!el)return 'nc';el.focus();document.execCommand('selectAll',false,null);"
+                "document.execCommand('insertText',false,t);return el.innerText.length;})()")
+        time.sleep(1)
+        r = js(tab, "(()=>{const el=document.querySelector('.ProseMirror[contenteditable=true]');"
+                    "const f=el&&el.closest('form');const s=(f||document).querySelector('button[type=submit]');"
+                    "if(s){s.click();return 'sent';}"
+                    "el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,bubbles:true}));return 'enter';})()")
+        for _ in range(8):   # 送信できていれば本文に依頼IDが現れる
+            time.sleep(2)
+            t = body_text(tab)
+            ed = js(tab, "(()=>{const el=document.querySelector('.ProseMirror[contenteditable=true]');return el?el.innerText.trim().length:0})()").strip().strip('"')
+            if isinstance(t, str) and nonce in t and ed.isdigit() and int(ed) <= 1: return f"{r}/ok{attempt}"
+        print(f"send retry {attempt}: {r}", flush=True)
+    return "unsent"
 
 def body_len(tab):
     v = js(tab, "document.body.innerText.length").strip().strip('"')
@@ -94,22 +112,25 @@ def capped(tab):
 
 MARKER = "published は記事の公開日（不明なら null）。"
 
-def answer_text(tab):
-    """ボットのスレッドは伸び続けるので、今回のプロンプト末尾（MARKER）より後ろだけを答えとして見る。
-    プロンプト自身にも JSON の雛形が入っているため、これをしないと雛形を答えと誤認する（2026-09-16 に踏んだ）。"""
+def answer_text(tab, nonce=None):
+    """スレッドは伸び続けるので、今回の依頼ID（無ければ MARKER）より後ろだけを答えとして見る。"""
     t = body_text(tab)
     if not isinstance(t, str): return ""
-    i = t.rfind(MARKER)
-    return t[i + len(MARKER):] if i >= 0 else ""
+    key = nonce or MARKER
+    i = t.rfind(key)
+    if i < 0: return ""
+    rest = t[i + len(key):]
+    j = rest.find(MARKER)          # 依頼文の末尾までは飛ばす
+    return rest[j + len(MARKER):] if j >= 0 else rest
 
-def wait_done(tab, base, max_s=720):
+def wait_done(tab, base, max_s=720, nonce=None):
     """答えの中に JSON 配列が現れ、かつ本文が2回連続で変化しなくなったら完了。実測: ボットは検索込みで7〜8分。"""
     t0, prev, stab = time.time(), -1, 0
     while time.time() - t0 < max_s:
         if capped(tab):
             print("GROK_CAPPED", flush=True)
             return False
-        ans = answer_text(tab); n = len(ans)
+        ans = answer_text(tab, nonce); n = len(ans)
         stab = stab + 1 if n == prev else 0
         prev = n
         if stab >= 2 and re.search(r'\[\s*\{\s*"title"', ans):
@@ -161,23 +182,36 @@ def verify(row):
 
 DEFAULT_THEME = "新商品・限定酒 / 受賞（IWC, Kura Master, 全国新酒鑑評会, SAKE COMPETITION など）/ 輸出・海外展開 / 蔵元の代替わり・新蔵・廃業 / 酒米・酒造好適米 / 研究・技術 / 業界の動き"
 
-def main(n=15, akita=2, days=3, theme=DEFAULT_THEME):
+def known_titles(k=40):
+    """既に持っているネタの見出し（直近 k 件）。Grok に「これは除外」と渡して同じ物を返させない。"""
+    try:
+        rows = [json.loads(l) for l in open(os.path.join(HOME, "data", "backlog.jsonl"))]
+    except FileNotFoundError: return []
+    return [r.get("title", "")[:40] for r in rows[-k:] if r.get("title")]
+
+def main(n=15, akita=2, days=3, theme=DEFAULT_THEME, until=None):
     seen = set(open(SEEN).read().split()) if os.path.exists(SEEN) else set()
     tab = pick_tab()
     if tab is None:
         print("no tab"); sys.exit(1)
-    since = (dt.date.today() - dt.timedelta(days=days)).isoformat()
+    until = until or dt.date.today().isoformat()
+    since = (dt.date.fromisoformat(until) - dt.timedelta(days=days)).isoformat()
+    kt = known_titles()
+    exclude = ("既に把握済みなので除外する見出し:\n" + "\n".join(f"- {t}" for t in kt) + "\n") if kt else ""
     br({"action": "goto", "tab": tab, "url": BOT_URL, "wait": 4000})
+    nonce = "MIA" + dt.datetime.now().strftime("%Y%m%d%H%M%S")
     base = body_len(tab)
-    r = send(tab, TPL.format(mark=MARK, since=since, n=n, akita=akita, theme=theme))
-    print(f"tab{tab} send={r} base={base}", flush=True)
-    if not wait_done(tab, base):
+    r = send(tab, TPL.format(nonce=nonce, mark=MARK, since=since, until=until, n=n, akita=akita, theme=theme, exclude=exclude), nonce)
+    print(f"tab{tab} send={r} base={base} nonce={nonce}", flush=True)
+    if r == "unsent":
+        print("could not send prompt to Grok", flush=True); sys.exit(2)
+    if not wait_done(tab, base, nonce=nonce):
         if capped(tab):
             # 久保さん方針(2026-09-16): 上限に当たったら収集は止める。Claude 検索への代替はしない（トークンを使うため）。
             print("Grok weekly/daily limit reached — no collection today", flush=True)
             sys.exit(3)
         print("timeout waiting for Grok", flush=True)
-    rows = parse(answer_text(tab))
+    rows = parse(answer_text(tab, nonce))
     out, dropped = [], []
     for row in rows:
         if row["url"] in seen:
@@ -201,5 +235,5 @@ def main(n=15, akita=2, days=3, theme=DEFAULT_THEME):
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(); ap.add_argument("--days", type=int, default=3); ap.add_argument("--n", type=int, default=15); ap.add_argument("--theme", default=DEFAULT_THEME)
-    a = ap.parse_args(); main(n=a.n, days=a.days, theme=a.theme)
+    ap = argparse.ArgumentParser(); ap.add_argument("--days", type=int, default=3); ap.add_argument("--n", type=int, default=15); ap.add_argument("--theme", default=DEFAULT_THEME); ap.add_argument("--until", default=None)
+    a = ap.parse_args(); main(n=a.n, days=a.days, theme=a.theme, until=a.until)
