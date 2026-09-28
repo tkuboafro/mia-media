@@ -72,6 +72,19 @@ def new_chat(tab):
     js(tab, "(()=>{const b=Array.from(document.querySelectorAll('a,button')).find(e=>/^new chat$/i.test((e.getAttribute('aria-label')||e.innerText||'').trim()));if(b){b.click();return 'new';}return 'none';})()")
     time.sleep(2)
 
+BUSY_JS = "(()=>{const b=Array.from(document.querySelectorAll('button')).find(e=>/stop/i.test(e.getAttribute('aria-label')||''));return b?'busy':'idle'})()"
+STOP_JS = "(()=>{const b=Array.from(document.querySelectorAll('button')).find(e=>/stop/i.test(e.getAttribute('aria-label')||''));if(b){b.click();return 'stopped'}return 'none'})()"
+
+def wait_idle(tab, max_s=600):
+    """前の依頼がまだ生成中なら待つ。待ちきれなければ生成を止める（依頼が積み重なると Grok が混乱する）。"""
+    t0 = time.time()
+    while time.time() - t0 < max_s:
+        if js(tab, BUSY_JS).strip().strip('"') != "busy": return True
+        time.sleep(15)
+    print("grok still busy — stopping previous generation", flush=True)
+    js(tab, STOP_JS); time.sleep(3)
+    return False
+
 def send(tab, prompt, nonce):
     b64 = base64.b64encode(prompt.encode()).decode()
     for attempt in range(3):
@@ -123,7 +136,7 @@ def answer_text(tab, nonce=None):
     j = rest.find(MARKER)          # 依頼文の末尾までは飛ばす
     return rest[j + len(MARKER):] if j >= 0 else rest
 
-def wait_done(tab, base, max_s=720, nonce=None):
+def wait_done(tab, base, max_s=1500, nonce=None):
     """答えの中に JSON 配列が現れ、かつ本文が2回連続で変化しなくなったら完了。実測: ボットは検索込みで7〜8分。"""
     t0, prev, stab = time.time(), -1, 0
     while time.time() - t0 < max_s:
@@ -200,6 +213,7 @@ def main(n=15, akita=2, days=3, theme=DEFAULT_THEME, until=None):
     exclude = ("既に把握済みなので除外する見出し:\n" + "\n".join(f"- {t}" for t in kt) + "\n") if kt else ""
     br({"action": "goto", "tab": tab, "url": BOT_URL, "wait": 4000})
     nonce = "MIA" + dt.datetime.now().strftime("%Y%m%d%H%M%S")
+    wait_idle(tab)
     base = body_len(tab)
     r = send(tab, TPL.format(nonce=nonce, mark=MARK, since=since, until=until, n=n, akita=akita, theme=theme, exclude=exclude), nonce)
     print(f"tab{tab} send={r} base={base} nonce={nonce}", flush=True)
@@ -210,7 +224,7 @@ def main(n=15, akita=2, days=3, theme=DEFAULT_THEME, until=None):
             # 久保さん方針(2026-09-16): 上限に当たったら収集は止める。Claude 検索への代替はしない（トークンを使うため）。
             print("Grok weekly/daily limit reached — no collection today", flush=True)
             sys.exit(3)
-        print("timeout waiting for Grok", flush=True)
+        print("timeout waiting for Grok — stopping generation", flush=True); js(tab, STOP_JS)
     rows = parse(answer_text(tab, nonce))
     out, dropped = [], []
     for row in rows:
