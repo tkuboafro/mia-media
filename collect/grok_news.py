@@ -72,7 +72,7 @@ def new_chat(tab):
     js(tab, "(()=>{const b=Array.from(document.querySelectorAll('a,button')).find(e=>/^new chat$/i.test((e.getAttribute('aria-label')||e.innerText||'').trim()));if(b){b.click();return 'new';}return 'none';})()")
     time.sleep(2)
 
-BUSY_JS = "(()=>{const b=Array.from(document.querySelectorAll('button')).find(e=>/stop/i.test(e.getAttribute('aria-label')||''));return b?'busy':'idle'})()"
+BUSY_JS = "(()=>{const b=Array.from(document.querySelectorAll('button')).find(e=>/stop/i.test(e.getAttribute('aria-label')||''));const t=document.body.innerText.slice(-1500);return (b||/Thinking|Searching/.test(t))?'busy':'idle'})()"
 STOP_JS = "(()=>{const b=Array.from(document.querySelectorAll('button')).find(e=>/stop/i.test(e.getAttribute('aria-label')||''));if(b){b.click();return 'stopped'}return 'none'})()"
 
 def wait_idle(tab, max_s=600):
