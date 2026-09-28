@@ -78,6 +78,8 @@ def ranked(extra_files=()):
     used = set(open(USED).read().split()) if os.path.exists(USED) else set()
     topics = used_topics()
     rows = [r for r in load_backlog() if r["url"] not in used and not dup_of_used(r, topics)]
+    if akita_bonus() == 0.0 and any(not r.get("akita") for r in rows):  # 秋田が直近で多すぎる間は秋田ネタを後回しにする
+        rows = [r for r in rows if not r.get("akita")]
     for p in extra_files:
         rows += [r for r in json.load(open(p))["rows"] if r["url"] not in used]
     rows = [r for r in rows if fresh(r)]
