@@ -120,9 +120,14 @@ def find_by_key(slug):
 
 def pending_pages(include_waiting=False):
     sts = ("承認", "差戻し", "見送り") + (("確認待ち",) if include_waiting else ())
-    r = api("POST", f"/data_sources/{DS}/query", {"filter": {"and": [{"property": "チャネル", "select": {"equals": "Journal"}},
-            {"or": [{"property": "ステータス", "select": {"equals": s}} for s in sts]}]}, "page_size": 50})
-    return r.get("results", [])
+    body = {"filter": {"and": [{"property": "チャネル", "select": {"equals": "Journal"}},
+            {"or": [{"property": "ステータス", "select": {"equals": s}} for s in sts]}]}, "page_size": 100}
+    out = []
+    while True:  # 100 件を超えるので必ずページングする（2026-09-28 に 50 件で切れていた）
+        r = api("POST", f"/data_sources/{DS}/query", body)
+        out += r.get("results", [])
+        if not r.get("has_more"): return out
+        body["start_cursor"] = r["next_cursor"]
 
 def prop_text(page, name):
     p = page["properties"].get(name) or {}
