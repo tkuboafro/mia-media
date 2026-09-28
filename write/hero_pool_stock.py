@@ -10,13 +10,13 @@ PER_KEY = 3
 
 POOL = {
   "sake":    {"caption": "日本酒（イメージ）", "desc": "Japanese sake: cups, tokkuri, pouring or clear sake in a glass; Japan setting; no brand labels",
-              "queries": ["sake cup pouring", "sake tokkuri ochoko", "japanese sake glass", "sake set wooden table"]},
+              "queries": ["sake cup pouring", "sake tokkuri ochoko", "japanese sake glass", "sake set wooden table", "masu sake cup", "sake ochoko closeup", "nihonshu pouring", "sake cup ceramic hands"]},
   "rice":    {"caption": "日本の田園（イメージ）", "desc": "Japanese rice paddies or rice ears, any season; clearly Japan; no people prominent",
               "queries": ["rice paddy japan", "rice ears closeup japan", "rice terraces japan morning", "rice field autumn japan"]},
   "shochu":  {"caption": "焼酎（イメージ）", "desc": "shochu or clear spirit on the rocks / with soda in a simple glass, Japanese izakaya or home setting; no labels",
               "queries": ["shochu on the rocks", "japanese highball glass", "clear spirit glass ice japan"]},
   "awamori": {"caption": "泡盛（イメージ）", "desc": "awamori or Okinawan spirit in a small glass or kame pot, Okinawa setting; no labels",
-              "queries": ["awamori glass okinawa", "okinawa spirit glass", "shochu on the rocks"]},
+              "queries": ["awamori glass okinawa", "okinawa spirit glass", "shochu on the rocks", "okinawa pottery cup", "okinawa sea coast"]},
   "whisky":  {"caption": "ウイスキー（イメージ）", "desc": "whisky in a tumbler or nosing glass, amber, wooden bar or table; no bottle labels or logos",
               "queries": ["whisky glass neat", "whisky tasting glass dram", "whisky glass amber wooden bar"]},
   "gin":     {"caption": "ジン（イメージ）", "desc": "gin and tonic or clear spirit with botanicals in a glass; no bottle labels or logos",
@@ -30,7 +30,7 @@ POOL = {
   "brewery": {"caption": "酒蔵（イメージ）", "desc": "exterior or interior of a traditional Japanese sake brewery: white plaster walls, dark wood, cedar ball (sugidama); no readable signage",
               "queries": ["sake brewery japan exterior", "sugidama cedar ball brewery", "old japanese storehouse kura"]},
   "market":  {"caption": "日本の酒類業界（イメージ）", "desc": "Japanese liquor shop shelves, izakaya counter or bar with bottles where no brand names are readable",
-              "queries": ["izakaya counter japan night", "japanese bar counter bottles blur", "sake shop shelves japan"]},
+              "queries": ["izakaya counter japan night", "japanese bar counter bottles blur", "sake shop shelves japan", "izakaya lantern alley tokyo", "japanese bar interior warm light", "yokocho alley night"]},
 }
 
 def build(keys):
