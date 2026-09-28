@@ -2,7 +2,7 @@
 # 過去ネタの量産: 月ごとの窓 × テーマで Grok 収集（同じ物を返させない）→ まとめて日本語原稿（久保さん 2026-09-28）
 set -u
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-export MIA_MAX_AGE_DAYS=120
+export MIA_MAX_AGE_DAYS=${MIA_MAX_AGE_DAYS:-120}
 H="$HOME/mia-media"; LOG="$H/logs/batch_past_$(date +%F_%H%M).log"; PY=/usr/bin/python3
 cd "$H"; echo "=== $(date '+%F %T') batch_past start ===" | tee -a "$LOG"
 WINDOWS=(${MIA_WINDOWS:-"2026-07-31 31" "2026-08-31 31" "2026-09-14 14"})   # until days（MIA_WINDOWS で上書き可）

@@ -89,4 +89,5 @@ def ranked(extra_files=()):
 if __name__ == "__main__":
     rows = ranked(sys.argv[1:])
     for r in rows[:6]: print(round(score(r), 1), r.get("akita"), r.get("category"), (r.get("title") or "")[:50], file=sys.stderr)
-    print(json.dumps(rows[0] if rows else None, ensure_ascii=False))
+    floor = float(os.environ.get("MIA_MIN_SCORE", "-99"))  # 量産時は薄いネタで埋めない（久保さん）
+    print(json.dumps(rows[0] if rows and score(rows[0]) >= floor else None, ensure_ascii=False))
