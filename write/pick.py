@@ -10,10 +10,19 @@ W = {"輸出": 4, "受賞": 3, "蔵元": 3, "研究": 2, "新商品": 2, "酒米
 LOCAL_ONLY = ("キャンペーン", "宿泊", "割引", "クーポン", "観光", "ふるさと納税", "来場", "来店", "店頭", "POP UP", "ポップアップ", "フェア", "まつり", "祭り", "抽選", "先着")
 GLOBAL = ("海外", "輸出", "EU", "欧州", "ヨーロッパ", "国際", "世界", "IWC", "Kura Master", "オスカー", "パリ", "ロンドン", "アムステルダム", "ベルリン", "マドリード", "ワールド", "免税", "関税")
 
+def akita_bonus():
+    """秋田は「たまに」（久保さん）。直近10本のうち秋田が3本以上なら加点をやめ、2本以上なら半分にする。"""
+    files = sorted(glob.glob(os.path.join(HOME, "data", "article_*.json")), key=os.path.getmtime)[-10:]
+    n = 0
+    for f in files:
+        try: n += bool((json.load(open(f)).get("row") or {}).get("akita"))
+        except Exception: pass
+    return 0.0 if n >= 3 else (1.25 if n >= 2 else 2.5)
+
 def score(r):
     text = (r.get("title") or "") + (r.get("summary_ja") or "") + (r.get("why_eu") or "")
     s = W.get(r.get("category") or "", 0)
-    s += 2.5 if r.get("akita") else 0
+    s += akita_bonus() if r.get("akita") else 0
     if any(k in text for k in LOCAL_ONLY): s -= 5
     s += 3 * min(2, sum(1 for k in GLOBAL if k in text))
     if r.get("published"):
