@@ -56,12 +56,12 @@ def _bigrams(t):
     return {t[i:i + 2] for i in range(len(t) - 1)}
 
 def dup_of_used(r, topics):
-    """同じ出来事を別URLで拾ったものを弾く。単語一致（4語）か、文字2-gramの包含率（出典違いで言い回しが変わっても拾える）。"""
+    """同じ出来事を別URLで拾ったものを弾く。単語一致（4語）か、文字2-gramの Jaccard（出典違いで言い回しが変わっても拾える）。"""
     text = r.get("title", "") + " " + r.get("summary_ja", "")
     t = _toks(text); b = _bigrams(text)
     for u, ub in topics:
         if len(t & u) >= 4: return True
-        if b and ub and len(b & ub) / min(len(b), len(ub)) >= 0.3: return True
+        if b and ub and len(b & ub) / len(b | ub) >= 0.2: return True   # Jaccard。包含率だと ISC 等の長い定型句で誤爆する
     return False
 
 def ranked(extra_files=()):
