@@ -34,7 +34,7 @@ def load_backlog():
     return rows
 
 def fresh(r):
-    try: return (dt.date.today() - dt.date.fromisoformat((r.get("published") or "")[:10])).days <= 10
+    try: return (dt.date.today() - dt.date.fromisoformat((r.get("published") or "")[:10])).days <= int(os.environ.get("MIA_MAX_AGE_DAYS", "10"))  # 過去ネタの量産時は環境変数で広げる
     except Exception: return True
 
 import re, glob
