@@ -24,6 +24,7 @@ def score(r):
     s = W.get(r.get("category") or "", 0)
     s += akita_bonus() if r.get("akita") else 0
     if any(k in text for k in LOCAL_ONLY): s -= 5
+    if any(k in text for k in ("日本上陸", "日本初上陸", "輸入卸", "日本発売", "日本市場に投入")) and not any(k in text for k in ("日本酒", "焼酎", "泡盛", "ジャパニーズ")): s -= 6  # 海外産の酒が日本に来る話は方針外
     s += 3 * min(2, sum(1 for k in GLOBAL if k in text))
     if r.get("published"):
         try: s += max(0, 3 - (dt.date.today() - dt.date.fromisoformat(r["published"][:10])).days)
