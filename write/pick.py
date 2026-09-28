@@ -47,12 +47,22 @@ def used_topics():
     for f in glob.glob(os.path.join(HOME, "data", "article_*.json")):
         try: r = json.load(open(f)).get("row") or {}
         except Exception: continue
-        out.append(_toks(r.get("title", "") + " " + r.get("summary_ja", "")))
+        text = r.get("title", "") + " " + r.get("summary_ja", "")
+        out.append((_toks(text), _bigrams(text)))
     return out
 
+def _bigrams(t):
+    t = re.sub(r"[\s、。「」『』（）()・,.:：;；!！?？\-—–/／|｜]", "", t or "")
+    return {t[i:i + 2] for i in range(len(t) - 1)}
+
 def dup_of_used(r, topics):
-    t = _toks(r.get("title", "") + " " + r.get("summary_ja", ""))
-    return any(len(t & u) >= 4 for u in topics)
+    """同じ出来事を別URLで拾ったものを弾く。単語一致（4語）か、文字2-gramの包含率（出典違いで言い回しが変わっても拾える）。"""
+    text = r.get("title", "") + " " + r.get("summary_ja", "")
+    t = _toks(text); b = _bigrams(text)
+    for u, ub in topics:
+        if len(t & u) >= 4: return True
+        if b and ub and len(b & ub) / min(len(b), len(ub)) >= 0.3: return True
+    return False
 
 def ranked(extra_files=()):
     used = set(open(USED).read().split()) if os.path.exists(USED) else set()
