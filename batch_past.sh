@@ -5,7 +5,7 @@ export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 export MIA_MAX_AGE_DAYS=120
 H="$HOME/mia-media"; LOG="$H/logs/batch_past_$(date +%F_%H%M).log"; PY=/usr/bin/python3
 cd "$H"; echo "=== $(date '+%F %T') batch_past start ===" | tee -a "$LOG"
-WINDOWS=("2026-07-31 31" "2026-08-31 31" "2026-09-14 14")   # until days
+WINDOWS=(${MIA_WINDOWS:-"2026-07-31 31" "2026-08-31 31" "2026-09-14 14"})   # until days（MIA_WINDOWS で上書き可）
 THEMES=(
 "国際コンクールの受賞（IWC・Kura Master・SAKE COMPETITION・Milano Sake Challenge・IWSC・ISC・全国新酒鑑評会）と、日本酒・焼酎・ウイスキーの輸出・海外展開（EU・米国・アジア、関税や規制、海外提携）"
 "蔵元の物語（代替わり・若手や女性の杜氏・新しい蔵の開業・休止や廃業からの復活・異業種や海外出身の醸造家）と、造りの技術・研究（酵母や酒米、低アル・スパークリング・熟成・木桶・生酛、クラフトサケ、大学との共同研究）"
