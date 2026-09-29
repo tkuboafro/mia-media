@@ -27,9 +27,14 @@ for i in $(seq 1 $N); do
   [ -z "$ROW" ] || [ "$ROW" = "null" ] && { echo "no more candidates" | tee -a "$LOG"; break; }
   echo "$ROW" > data/today.json
   $PY -c "import json;json.dump({'rows':[json.load(open('data/today.json'))]},open('data/today_news.json','w'),ensure_ascii=False)"
-  echo "$($PY -c "import json;print(json.load(open('data/today.json'))['url'])")" >> data/used_urls.txt
+  URLNOW=$($PY -c "import json;print(json.load(open('data/today.json'))['url'])")
   SLUG=$($PY write/article_ja.py data/today_news.json 0 2>>"$LOG" | head -1)
-  [ -z "$SLUG" ] && { echo "write failed ($i)" | tee -a "$LOG"; continue; }
+  if [ -z "$SLUG" ]; then
+    FAILS=$((${FAILS:-0}+1)); echo "write failed ($i) consecutive=$FAILS" | tee -a "$LOG"
+    [ "$FAILS" -ge 5 ] && { echo "ABORT: 5 consecutive failures (usage limit?)" | tee -a "$LOG"; break; }
+    echo "$URLNOW" >> data/failed_urls.txt; sleep 600; continue
+  fi
+  FAILS=0; echo "$URLNOW" >> data/used_urls.txt   # 成功した時だけ使用済みにする
   URL=$($PY sns/review_request.py "$SLUG" 2>>"$LOG")
   echo "$(date '+%H:%M') WROTE [$i] $SLUG → $URL" | tee -a "$LOG"
 done

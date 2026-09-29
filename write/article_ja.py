@@ -128,11 +128,20 @@ def generate(row, feedback=None, model="opus", extra=()):
     medias = mediamod.collect(row, brand_terms(row))
     p = PROMPT.format(body=fetch_body(row["url"]), feedback=fb, extra_sources=xs, kbref=kbref, media=mediamod.as_prompt(medias), **{k: row.get(k) for k in ("title", "url", "source", "published", "summary_ja", "region", "category", "akita", "why_eu")})
     p = "".join(ch for ch in p if ch in "\n\t" or ord(ch) >= 32)  # kb/メディア由来の NUL・制御文字で subprocess が落ちるのを防ぐ
-    r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
-    try: raw = json.loads(r.stdout).get("result", "")
-    except Exception: raw = r.stdout
-    raw = re.sub(r"^```(?:json)?|```$", "", raw.strip(), flags=re.M).strip()
-    gen = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
+    import time
+    gen = None
+    for attempt in range(4):  # 使用量上限や一時障害で空応答が返る → 待って再試行（2026-09-29: 1時間で121本分の候補を捨てた反省）
+        r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
+        try:
+            j = json.loads(r.stdout); raw = j.get("result", "") or ""
+            if j.get("is_error") or not raw.strip(): print(f"claude -p empty/error (attempt {attempt}): {str(j.get('result') or r.stderr)[:200]}", file=sys.stderr); raw = ""
+        except Exception: raw = r.stdout
+        raw = re.sub(r"^```(?:json)?|```$", "", raw.strip(), flags=re.M).strip()
+        if "{" in raw:
+            try: gen = json.loads(raw[raw.find("{"):raw.rfind("}") + 1]); break
+            except Exception as e: print(f"json parse failed (attempt {attempt}): {e}", file=sys.stderr)
+        time.sleep([60, 300, 900, 0][attempt])
+    if gen is None: raise RuntimeError("claude -p returned no usable JSON after retries")
     # 本文末尾に「## 参考・出典」を書いてしまうことがある → 本文からは外す（sources で持つ）
     gen["body_md"] = re.split(r"\n##\s*参考[・･]?出典.*", gen["body_md"], flags=re.S)[0].rstrip()
     place_media(gen, medias)
