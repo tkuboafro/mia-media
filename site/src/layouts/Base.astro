@@ -2,7 +2,6 @@
 import { getCollection } from "astro:content";
 import { ClientRouter } from "astro:transitions";
 import "../styles/sw.css";
-import Mark from "../components/Mark.astro";
 import { SITE, NAV, MOD, type Lang } from "../config";
 import { shopHome } from "../lib/shop";
 interface Props { lang: Lang; title: string; description: string; ogImage?: string; alternates?: Record<string, string>; type?: string; ticker?: boolean }
@@ -15,7 +14,6 @@ const path = Astro.url.pathname;
 const section = path.includes("/events") ? "events" : path.includes("/breweries") ? "breweries" : "news";
 const consent = { en: ["We use cookieless analytics to see which stories are read. Allow analytics cookies for better statistics?", "Allow", "No thanks"], nl: ["We meten anoniem welke verhalen gelezen worden. Analytische cookies toestaan voor betere statistieken?", "Toestaan", "Nee, bedankt"], de: ["Wir messen anonym, welche Beiträge gelesen werden. Analyse-Cookies für bessere Statistiken erlauben?", "Erlauben", "Nein, danke"], es: ["Medimos de forma anónima qué historias se leen. ¿Permitir cookies analíticas para mejores estadísticas?", "Permitir", "No, gracias"], ja: ["どの記事が読まれているかを匿名で計測しています。より正確な統計のため解析クッキーを許可しますか？", "許可する", "許可しない"] }[lang];
 const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/og-default.png`, Astro.site).toString();
-const wireLabel = { en: "On the wire", nl: "Op de wire", de: "Auf dem Wire", es: "En el wire", ja: "最新" }[lang];
 const skip = { en: "Skip to content", nl: "Ga naar inhoud", de: "Zum Inhalt", es: "Ir al contenido", ja: "本文へ" }[lang];
 const menu = { en: "Menu", nl: "Menu", de: "Menü", es: "Menú", ja: "メニュー" }[lang];
 const foot = {
@@ -25,8 +23,6 @@ const foot = {
   es: { sections: "Secciones", follow: "Síguenos", shop: "Tienda", tagline: "Sake, shochu, whisky, vino y cerveza de Japón — cada día, para lectores en Europa.", ships: "Envío desde Ámsterdam a la UE", rss: "Feed RSS", made: "Publicado en Ámsterdam · Con raíces en Akita" },
   ja: { sections: "セクション", follow: "フォロー", shop: "ショップ", tagline: "日本酒・焼酎・ウイスキー・ワイン・ビール。日本のお酒の今を、毎日ヨーロッパへ。", ships: "アムステルダムから EU 全域へ発送", rss: "RSS", made: "アムステルダム発 · 秋田に根ざして" },
 }[lang];
-const wire = ticker ? (await getCollection("articles", (a) => a.data.lang === lang)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()).slice(0, 10) : [];
-const fmtShort = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang], { day: "2-digit", month: "short" });
 ---
 <!doctype html>
 <html lang={lang}>
@@ -52,7 +48,7 @@ const fmtShort = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", d
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href={`https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500${lang === "ja" ? "&family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500;700" : ""}&display=swap`} rel="stylesheet" />
+    <link href={`https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif:wght@700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500${lang === "ja" ? "&family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500;700" : ""}&display=swap`} rel="stylesheet" />
     <ClientRouter />
     {GA && <script is:inline define:vars={{ GA }}>
       window.dataLayer = window.dataLayer || []; function gtag(){ dataLayer.push(arguments); }
@@ -66,7 +62,7 @@ const fmtShort = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", d
     <a class="skip" href="#main">{skip}</a>
     <header class="top" data-open="false">
       <div class="wrap top__in">
-        <a class="brand" href={`${base}/${lang}/`}><Mark class="brand__mark" /><span><span class="brand__name">{SITE.name}</span></span></a>
+        <a class="brand" href={`${base}/${lang}/`}><span class="brand__name">{SITE.name}</span></a>
         <nav class="mainnav" aria-label={foot.sections}>
           <a href={`${base}/${lang}/`} aria-current={section === "news" ? "page" : undefined}>{nav.news}</a>
           <a href={`${base}/${lang}/events/`} aria-current={section === "events" ? "page" : undefined}>{nav.events}</a>
@@ -81,18 +77,6 @@ const fmtShort = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", d
           <button class="menubtn" type="button" aria-label={menu} aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
         </div>
       </div>
-      {ticker && wire.length > 0 && (
-        <div class="ticker" aria-label={wireLabel} data-static={wire.length < 5 ? "true" : undefined}>
-          <div class="wrap ticker__in">
-            <span class="ticker__label"><span class="ticker__dot" aria-hidden="true"></span>{wireLabel}</span>
-            <div class="ticker__track">
-              <div class="ticker__list">
-                {(wire.length < 5 ? wire : [...wire, ...wire]).map((a, i) => <a href={`${base}/${lang}/${a.data.story}/`} aria-hidden={i >= wire.length ? "true" : undefined} tabindex={i >= wire.length ? -1 : undefined}><b>{fmtShort(a.data.pubDate)}</b>{a.data.title}</a>)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
     <main id="main"><div class="wrap"><slot /></div></main>
     {GA && <div class="consent" id="sw-consent" hidden><span>{consent[0]}</span><button type="button" data-c="granted">{consent[1]}</button><button type="button" data-c="denied" class="ghost">{consent[2]}</button></div>}
@@ -100,7 +84,7 @@ const fmtShort = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", d
       <div class="wrap">
         <div class="bottom__grid">
           <div class="bottom__brand">
-            <a class="brand" href={`${base}/${lang}/`}><Mark class="brand__mark" /><span class="brand__name">{SITE.name}</span></a>
+            <a class="brand" href={`${base}/${lang}/`}><span class="brand__name">{SITE.name}</span></a>
             <p>{foot.tagline}</p>
           </div>
           <div><h4>{foot.sections}</h4><ul>

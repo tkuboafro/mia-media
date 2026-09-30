@@ -28,14 +28,12 @@ const t = {
 const today = fmt(new Date());
 ---
 <Base lang={lang} title={m.latest} description={SITE.tagline[lang]} alternates={alternates}>
-  <section class="masthead reveal">
-    <h1>{t.masthead[0]}<em>{t.masthead[1]}</em></h1>
-    <div class="masthead__side"><span class="mono">{t.issue} · {today}</span><p>{t.sub}</p></div>
-  </section>
+  <h1 class="vh">{SITE.name}</h1>
+  <div class="edition"><span class="mono">{t.issue} · {today}</span><p>{t.sub}</p></div>
 
   {lead ? (
-    <section class="lead reveal" style="--d:.08s">
-      <a class="lead__ph" href={href(lead)} aria-hidden="true" tabindex="-1">{lead.data.hero && <img src={lead.data.hero} alt="" fetchpriority="high" />}</a>
+    <section class={`lead${lead.data.hero ? "" : " lead--text"}`}>
+      {lead.data.hero && <a class="lead__ph" href={href(lead)} aria-hidden="true" tabindex="-1"><img src={lead.data.hero} alt="" fetchpriority="high" /></a>}
       <div class="lead__body">
         <div class="dateline">{lead.data.akita && <span class="akita">{ui.akita}</span>}{lead.data.category && <span class="cat">{catLabel(lead.data.category, lang)}</span>}{lead.data.regionEn && !(lead.data.akita && /^akita$/i.test(lead.data.regionEn)) && <span>{lead.data.regionEn}</span>}<time datetime={lead.data.pubDate.toISOString()}>{fmt(lead.data.pubDate)}</time></div>
         <h2><a href={href(lead)}>{lead.data.title}</a></h2>
