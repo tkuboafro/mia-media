@@ -1,0 +1,9 @@
+---
+// 蛇の目 (janome): the concentric rings of the sake tasting cup. Brand mark.
+const { class: cls = "", title = "The Sake Wire" } = Astro.props as { class?: string; title?: string };
+---
+<svg class={cls} viewBox="0 0 40 40" role="img" aria-label={title} xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2" />
+  <circle cx="20" cy="20" r="11.5" fill="none" stroke="var(--ai)" stroke-width="5" />
+  <circle cx="20" cy="20" r="3.2" fill="var(--shu)" />
+</svg>

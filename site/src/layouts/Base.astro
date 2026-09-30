@@ -1,17 +1,32 @@
 ---
+import { getCollection } from "astro:content";
+import { ClientRouter } from "astro:transitions";
+import "../styles/sw.css";
+import Mark from "../components/Mark.astro";
 import { SITE, NAV, MOD, type Lang } from "../config";
 import { shopHome } from "../lib/shop";
-interface Props { lang: Lang; title: string; description: string; ogImage?: string; alternates?: Record<string, string>; type?: string }
-const { lang, title, description, ogImage, alternates = {}, type = "website" } = Astro.props;
+interface Props { lang: Lang; title: string; description: string; ogImage?: string; alternates?: Record<string, string>; type?: string; ticker?: boolean }
+const { lang, title, description, ogImage, alternates = {}, type = "website", ticker = true } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ui = SITE.ui[lang];
+const ui = SITE.ui[lang]; const nav = NAV[lang]; const m = MOD[lang];
 const GA = import.meta.env.PUBLIC_GA4_ID;
-const nav = NAV[lang];
 const path = Astro.url.pathname;
 const section = path.includes("/events") ? "events" : path.includes("/breweries") ? "breweries" : "news";
 const consent = { en: ["We use cookieless analytics to see which stories are read. Allow analytics cookies for better statistics?", "Allow", "No thanks"], nl: ["We meten anoniem welke verhalen gelezen worden. Analytische cookies toestaan voor betere statistieken?", "Toestaan", "Nee, bedankt"], de: ["Wir messen anonym, welche Beiträge gelesen werden. Analyse-Cookies für bessere Statistiken erlauben?", "Erlauben", "Nein, danke"], es: ["Medimos de forma anónima qué historias se leen. ¿Permitir cookies analíticas para mejores estadísticas?", "Permitir", "No, gracias"], ja: ["どの記事が読まれているかを匿名で計測しています。より正確な統計のため解析クッキーを許可しますか？", "許可する", "許可しない"] }[lang];
 const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/og-default.png`, Astro.site).toString();
+const wireLabel = { en: "On the wire", nl: "Op de wire", de: "Auf dem Wire", es: "En el wire", ja: "最新" }[lang];
+const skip = { en: "Skip to content", nl: "Ga naar inhoud", de: "Zum Inhalt", es: "Ir al contenido", ja: "本文へ" }[lang];
+const menu = { en: "Menu", nl: "Menu", de: "Menü", es: "Menú", ja: "メニュー" }[lang];
+const foot = {
+  en: { sections: "Sections", follow: "Follow", shop: "Shop", tagline: "Japan's sake, shochu, whisky, wine and beer — reported daily for readers in Europe.", ships: "Ships from Amsterdam to the EU", rss: "RSS feed", made: "Published in Amsterdam · Rooted in Akita" },
+  nl: { sections: "Rubrieken", follow: "Volg ons", shop: "Shop", tagline: "Japanse sake, shochu, whisky, wijn en bier — dagelijks verslag voor lezers in Europa.", ships: "Verzonden uit Amsterdam naar de EU", rss: "RSS-feed", made: "Uitgegeven in Amsterdam · Geworteld in Akita" },
+  de: { sections: "Rubriken", follow: "Folgen", shop: "Shop", tagline: "Japans Sake, Shochu, Whisky, Wein und Bier – täglich für Leser in Europa.", ships: "Versand aus Amsterdam in die EU", rss: "RSS-Feed", made: "Herausgegeben in Amsterdam · Verwurzelt in Akita" },
+  es: { sections: "Secciones", follow: "Síguenos", shop: "Tienda", tagline: "Sake, shochu, whisky, vino y cerveza de Japón — cada día, para lectores en Europa.", ships: "Envío desde Ámsterdam a la UE", rss: "Feed RSS", made: "Publicado en Ámsterdam · Con raíces en Akita" },
+  ja: { sections: "セクション", follow: "フォロー", shop: "ショップ", tagline: "日本酒・焼酎・ウイスキー・ワイン・ビール。日本のお酒の今を、毎日ヨーロッパへ。", ships: "アムステルダムから EU 全域へ発送", rss: "RSS", made: "アムステルダム発 · 秋田に根ざして" },
+}[lang];
+const wire = ticker ? (await getCollection("articles", (a) => a.data.lang === lang)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()).slice(0, 10) : [];
+const fmtShort = (d: Date) => d.toLocaleDateString({ en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang], { day: "2-digit", month: "short" });
 ---
 <!doctype html>
 <html lang={lang}>
@@ -20,6 +35,8 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} · {SITE.name}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href={canonical} />
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href, Astro.site)} />)}
     <meta property="og:type" content={type} />
@@ -33,168 +50,98 @@ const og = ogImage ? new URL(ogImage, Astro.site).toString() : new URL(`${base}/
     <meta name="twitter:site" content="@TheSakeWire" />
     <link rel="alternate" type="application/rss+xml" title={`${SITE.name} (${lang})`} href={`${base}/${lang}/rss.xml`} />
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href={`https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500${lang === "ja" ? "&family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500;700" : ""}&display=swap`} rel="stylesheet" />
+    <ClientRouter />
     {GA && <script is:inline define:vars={{ GA }}>
       window.dataLayer = window.dataLayer || []; function gtag(){ dataLayer.push(arguments); }
-      // Consent Mode v2: EU 既定は拒否（クッキーなしの計測のみ）。許可でクッキー計測に切替
       gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
       try { if (localStorage.getItem('sw_consent') === 'granted') gtag('consent', 'update', { analytics_storage: 'granted' }); } catch (e) {}
       gtag('js', new Date()); gtag('config', GA, { anonymize_ip: true });
       var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA; document.head.appendChild(s);
     </script>}
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-    <style is:global>
-      :root { --ink:#1a1a1a; --text:#333; --muted:#666; --line:#dcdcdc; --grey:#f2f2f2; --wrap:1140px; }
-      * { box-sizing: border-box; }
-      html[lang=ja] { --serif: "Noto Serif JP", "Hiragino Mincho ProN", serif; --sans: "Noto Sans JP", "Hiragino Sans", sans-serif; }
-      body { margin:0; font-family: var(--sans, Inter), Inter, system-ui, sans-serif; color: var(--text); background:#fff; line-height:1.6; }
-      a { color: var(--ink); }
-      .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
-      header.top { border-bottom:1px solid var(--line); }
-      .top__in { display:grid; grid-template-columns: auto 1fr auto; align-items:center; gap:24px; min-height:72px; padding-top:10px; padding-bottom:10px; }
-      .brand { text-decoration:none; display:grid; gap:2px; }
-      .brand__name { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-weight:700; font-size:1.35rem; letter-spacing:.01em; line-height:1; }
-      .brand small { font-weight:400; color:var(--muted); font-size:.7rem; max-width:34ch; line-height:1.3; }
-      .mainnav { display:flex; gap:22px; justify-content:center; font-size:.9rem; font-weight:600; }
-      .mainnav a { text-decoration:none; color:var(--muted); padding:6px 0; border-bottom:2px solid transparent; }
-      .mainnav a:hover, .mainnav a[aria-current] { color:var(--ink); border-bottom-color:var(--ink); }
-      .top__right { display:flex; align-items:center; gap:14px; }
-      nav.langs { display:flex; gap:2px; font-size:.72rem; }
-      nav.langs a { text-decoration:none; color:var(--muted); padding:4px 5px; }
-      nav.langs a[aria-current] { color:var(--ink); font-weight:700; border-bottom:2px solid var(--ink); }
-      .shopbtn { display:grid; text-decoration:none; background:var(--ink); color:#fff; padding:8px 14px; border-radius:2px; line-height:1.2; }
-      .shopbtn strong { font-size:.85rem; }
-      .shopbtn small { font-size:.62rem; opacity:.8; white-space:nowrap; }
-      @media (max-width: 900px) { .top__in { grid-template-columns: 1fr auto; } .mainnav { grid-column: 1 / -1; justify-content:flex-start; gap:16px; overflow-x:auto; font-size:.85rem; } .brand small { display:none; } .shopbtn small { display:none; } }
-      main { padding: 32px 0 64px; }
-      .narrow { max-width: 880px; }
-      /* home */
-      .home-hero { display:grid; grid-template-columns: 1.6fr 1fr; gap:28px; margin-bottom:36px; align-items:start; }
-      .home-hero--single { grid-template-columns: 1fr; }
-      .home-hero--single .lead-story { display:grid; grid-template-columns: 1.2fr 1fr; gap:24px; align-items:center; }
-      .home-hero--single .lead-story .ph { grid-row: 1 / span 3; }
-      @media (max-width: 800px){ .home-hero, .home-hero--single .lead-story { grid-template-columns:1fr; } .home-hero--single .lead-story .ph { grid-row:auto; } }
-      .lead-story { display:grid; gap:12px; text-decoration:none; color:var(--ink); }
-      .lead-story .ph { aspect-ratio:16/9; background:var(--grey); overflow:hidden; }
-      .lead-story img { width:100%; height:100%; object-fit:cover; display:block; }
-      .lead-story h2 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height:1.15; margin:0; text-wrap:balance; }
-      .lead-story p { margin:0; font-size:1.02rem; color:var(--text); }
-      .side-stories { display:grid; gap:18px; align-content:start; }
-      .side-story { display:grid; grid-template-columns: 120px 1fr; gap:12px; text-decoration:none; color:var(--ink); }
-      .side-story .ph { aspect-ratio:4/3; background:var(--grey); overflow:hidden; }
-      .side-story img { width:100%; height:100%; object-fit:cover; display:block; }
-      .side-story h3 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size:1.05rem; line-height:1.3; margin:0 0 4px; }
-      .kicker { font-size:.72rem; color:var(--muted); display:flex; gap:10px; margin-bottom:6px; }
-      .band { background:var(--grey); padding:26px 28px; display:grid; grid-template-columns: 1fr auto; gap:24px; align-items:center; margin: 8px 0 40px; }
-      @media (max-width: 800px){ .band { grid-template-columns:1fr; } }
-      .band h2 { font-family: Inter, sans-serif; font-size:1rem; margin:0 0 6px; letter-spacing:.02em; }
-      .band p { margin:0; max-width:70ch; font-size:.95rem; }
-      .band .acts { display:flex; gap:10px; flex-wrap:wrap; }
-      .btn2 { display:inline-block; text-decoration:none; padding:11px 18px; border:1px solid var(--ink); color:var(--ink); font-weight:700; font-size:.85rem; border-radius:2px; background:#fff; }
-      .cols { display:grid; grid-template-columns: 1fr 320px; gap:40px; align-items:start; }
-      @media (max-width: 900px){ .cols { grid-template-columns:1fr; } }
-      .rail { display:grid; gap:24px; position:sticky; top:16px; }
-      .rail h3 { font-family: Inter, sans-serif; font-size:.9rem; margin:0 0 2px; }
-      .rail .sub { font-size:.78rem; color:var(--muted); margin:0 0 10px; }
-      .rail .stack { display:grid; gap:8px; }
-      .sec-title { font-family: Inter, sans-serif; font-size:1rem; letter-spacing:.02em; margin:0 0 16px; padding-bottom:8px; border-bottom:2px solid var(--ink); }
-      .akita { margin-top:44px; }
-      .akita .tiles { display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
-      @media (max-width: 700px){ .akita .tiles { grid-template-columns:1fr; } }
-      .tile { position:relative; display:flex; align-items:flex-end; min-height:150px; text-decoration:none; color:#fff; background:var(--grey) center/cover no-repeat; padding:14px; }
-      .tile::before { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.65)); }
-      .tile span { position:relative; font-weight:700; }
-      /* article */
-      .taste { border:1px solid var(--ink); padding:16px 18px; margin: 28px 0; }
-      .taste h3 { font-family: Inter, sans-serif; font-size:.95rem; margin:0 0 2px; }
-      .taste .sub { font-size:.8rem; color:var(--muted); margin:0 0 12px; }
-      .taste .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-      @media (max-width: 700px){ .taste .grid2 { grid-template-columns:1fr; } }
-      .cta2 { background:var(--ink); color:#fff; padding:26px 28px; margin-top:36px; display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; }
-      @media (max-width: 700px){ .cta2 { grid-template-columns:1fr; } }
-      .cta2 h3 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size:1.4rem; margin:0 0 6px; }
-      .cta2 p { margin:0; opacity:.85; font-size:.92rem; max-width:60ch; }
-      .cta2 .btn { background:#fff; color:var(--ink); }
-      .toc { font-size:.82rem; border-left:2px solid var(--line); padding-left:12px; }
-      .toc strong { display:block; margin-bottom:6px; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
-      .toc a { display:block; text-decoration:none; color:var(--text); padding:3px 0; }
-      .share { display:flex; gap:8px; flex-wrap:wrap; font-size:.8rem; }
-      .share a { text-decoration:none; border:1px solid var(--line); padding:6px 10px; color:var(--ink); }
-      .related { margin-top:44px; }
-      /* embeds (YouTube / press images / X / Instagram) */
-      .embed { margin: 28px 0; }
-      .embed--video { aspect-ratio: 16/9; background: var(--grey); }
-      .embed--video iframe { width:100%; height:100%; border:0; display:block; }
-      .embed--image img { width:100%; height:auto; display:block; }
-      .embed--ai { position:relative; }
-      .ai-badge { position:absolute; right:10px; top:10px; font:600 .66rem/1 Inter, sans-serif; letter-spacing:.08em; color:#fff; background:rgba(0,0,0,.55); padding:4px 6px; border-radius:3px; }
-      .embed figcaption { font-family: Inter, sans-serif; font-size:.78rem; color:var(--muted); margin-top:8px; line-height:1.5; }
-      .embed--social { display:flex; justify-content:center; }
-      .embed--social blockquote { margin:0; max-width:550px; width:100%; }
-      h1 { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-weight:700; line-height:1.2; letter-spacing:-.01em; font-size: clamp(1.7rem, 3.4vw, 2.5rem); margin:0 0 12px; }
-      .lead { font-size:1.1rem; color:var(--text); margin:0 0 24px; }
-      .meta { font-size:.8rem; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
-      .badge { display:inline-block; font-size:.68rem; font-weight:700; letter-spacing:.06em; border:1px solid var(--ink); padding:2px 7px; }
-      .hero { margin:0 0 28px; background:var(--grey); aspect-ratio: 16/9; overflow:hidden; }
-      .hero img { width:100%; height:100%; object-fit:cover; display:block; }
-      article .body { font-family: var(--serif, "Noto Serif"), "Noto Serif", Georgia, serif; font-size:1.08rem; line-height:1.85; }
-      article .body h2 { font-family: Inter, sans-serif; font-size:1.15rem; margin:2em 0 .6em; }
-      article .body p { margin:0 0 1.2em; }
-      article .body blockquote { border-left:3px solid var(--ink); margin:1.4em 0; padding:.2em 1em; color:var(--muted); }
-      .source { border-top:1px solid var(--line); margin-top:36px; padding-top:18px; font-size:.85rem; color:var(--muted); }
-      .sources h2 { font-family: Inter, sans-serif; font-size:.95rem; margin:0 0 8px; }
-      .sources ul { margin:0 0 10px; padding-left:1.2em; }
-      .sources li { margin:0 0 4px; }
-      .hero figcaption { font-size:.72rem; color:var(--muted); margin-top:6px; }
-      .cta { margin-top:36px; background:var(--grey); padding:22px 24px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
-      .btn { display:inline-block; background:#2b2b2b; color:#fff; text-decoration:none; padding:12px 22px; font-weight:700; font-size:.85rem; border-radius:2px; }
-      .list { list-style:none; margin:0; padding:0; display:grid; gap:28px; }
-      .card { display:grid; grid-template-columns: 1fr; gap:12px; }
-      @media (min-width:640px){ .card { grid-template-columns: 220px 1fr; } }
-      .card .thumb { aspect-ratio:16/9; background:var(--grey); overflow:hidden; }
-      .card .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-      .card h2 { font-family:"Noto Serif", Georgia, serif; font-size:1.25rem; margin:0 0 6px; line-height:1.3; }
-      .card h2 a { text-decoration:none; }
-      .card p { margin:0 0 6px; color:var(--text); }
-      .consent[hidden] { display:none !important; }
-      .consent { position:fixed; left:16px; right:16px; bottom:16px; max-width:640px; margin:0 auto; background:#fff; border:1px solid var(--line); box-shadow:0 10px 30px rgba(0,0,0,.12); padding:14px 16px; font-size:.82rem; display:flex; gap:10px; align-items:center; flex-wrap:wrap; z-index:50; }
-      .consent button { font-family:Inter,sans-serif; font-size:.8rem; font-weight:700; padding:8px 14px; border:1px solid var(--ink); background:var(--ink); color:#fff; cursor:pointer; border-radius:2px; }
-      .consent button.ghost { background:#fff; color:var(--ink); }
-      footer.bottom { border-top:1px solid var(--line); padding:24px 0 40px; font-size:.78rem; color:var(--muted); }
-      footer.bottom .wrap { display:flex; flex-wrap:wrap; gap:8px 24px; justify-content:space-between; }
-    </style>
   </head>
   <body>
-    <header class="top"><div class="wrap top__in">
-      <a class="brand" href={`${base}/${lang}/`}><span class="brand__name">{SITE.name}</span></a>
-      <nav class="mainnav" aria-label="Sections">
-        <a href={`${base}/${lang}/`} aria-current={section === "news" ? "page" : undefined}>{nav.news}</a>
-        <a href={`${base}/${lang}/events/`} aria-current={section === "events" ? "page" : undefined}>{nav.events}</a>
-        <a href={`${base}/${lang}/breweries/`} aria-current={path.includes("/breweries") ? "page" : undefined}>{nav.breweries}</a>
-        <a href={SITE.about + "?utm_source=sakewire&utm_medium=nav&utm_campaign=about"}>{nav.about}</a>
-      </nav>
-      <div class="top__right">
-        <nav class="langs" aria-label="Language">
-          {SITE.langs.map((l) => <a href={alternates[l] ?? `${base}/${l}/`} aria-current={l === lang ? "page" : undefined} hreflang={l}>{l.toUpperCase()}</a>)}
+    <a class="skip" href="#main">{skip}</a>
+    <header class="top" data-open="false">
+      <div class="wrap top__in">
+        <a class="brand" href={`${base}/${lang}/`}><Mark class="brand__mark" /><span><span class="brand__name">{SITE.name}</span></span></a>
+        <nav class="mainnav" aria-label={foot.sections}>
+          <a href={`${base}/${lang}/`} aria-current={section === "news" ? "page" : undefined}>{nav.news}</a>
+          <a href={`${base}/${lang}/events/`} aria-current={section === "events" ? "page" : undefined}>{nav.events}</a>
+          <a href={`${base}/${lang}/breweries/`} aria-current={section === "breweries" ? "page" : undefined}>{nav.breweries}</a>
+          <a href={SITE.about + "?utm_source=sakewire&utm_medium=nav&utm_campaign=about"}>{nav.about}</a>
         </nav>
-        <a class="shopbtn" href={shopHome({ medium: "header", campaign: "shop", content: lang })}><strong>{nav.shop} →</strong><small>{nav.shopNote}</small></a>
+        <div class="top__right">
+          <nav class="langs" aria-label="Language">
+            {SITE.langs.map((l) => <a href={alternates[l] ?? `${base}/${l}/`} aria-current={l === lang ? "page" : undefined} hreflang={l} lang={l} title={SITE.langNames[l]}>{l.toUpperCase()}</a>)}
+          </nav>
+          <a class="shopbtn" href={shopHome({ medium: "header", campaign: "shop", content: lang })}><strong>{nav.shop}</strong><small>{nav.shopNote}</small></a>
+          <button class="menubtn" type="button" aria-label={menu} aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+        </div>
       </div>
-    </div></header>
-    <main><div class="wrap"><slot /></div></main>
+      {ticker && wire.length > 0 && (
+        <div class="ticker" aria-label={wireLabel} data-static={wire.length < 5 ? "true" : undefined}>
+          <div class="wrap ticker__in">
+            <span class="ticker__label"><span class="ticker__dot" aria-hidden="true"></span>{wireLabel}</span>
+            <div class="ticker__track">
+              <div class="ticker__list">
+                {(wire.length < 5 ? wire : [...wire, ...wire]).map((a, i) => <a href={`${base}/${lang}/${a.data.story}/`} aria-hidden={i >= wire.length ? "true" : undefined} tabindex={i >= wire.length ? -1 : undefined}><b>{fmtShort(a.data.pubDate)}</b>{a.data.title}</a>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+    <main id="main"><div class="wrap"><slot /></div></main>
     {GA && <div class="consent" id="sw-consent" hidden><span>{consent[0]}</span><button type="button" data-c="granted">{consent[1]}</button><button type="button" data-c="denied" class="ghost">{consent[2]}</button></div>}
-    {GA && <script is:inline>
-      (function () { var box = document.getElementById('sw-consent'); if (!box) return;
+    <footer class="bottom">
+      <div class="wrap">
+        <div class="bottom__grid">
+          <div class="bottom__brand">
+            <a class="brand" href={`${base}/${lang}/`}><Mark class="brand__mark" /><span class="brand__name">{SITE.name}</span></a>
+            <p>{foot.tagline}</p>
+          </div>
+          <div><h4>{foot.sections}</h4><ul>
+            <li><a href={`${base}/${lang}/`}>{nav.news}</a></li>
+            <li><a href={`${base}/${lang}/events/`}>{nav.events}</a></li>
+            <li><a href={`${base}/${lang}/breweries/`}>{nav.breweries}</a></li>
+            <li><a href={SITE.about + "?utm_source=sakewire&utm_medium=footer&utm_campaign=about"}>{nav.about}</a></li>
+          </ul></div>
+          <div><h4>{foot.follow}</h4><ul>
+            <li><a href="https://www.instagram.com/thesakewire/" rel="me noopener" target="_blank">Instagram</a></li>
+            <li><a href="https://www.threads.com/@thesakewire" rel="me noopener" target="_blank">Threads</a></li>
+            <li><a href="https://x.com/TheSakeWire" rel="me noopener" target="_blank">X</a></li>
+            <li><a href={`${base}/${lang}/rss.xml`}>{foot.rss}</a></li>
+          </ul></div>
+          <div><h4>{foot.shop}</h4><ul>
+            <li><a href={shopHome({ medium: "footer", campaign: "shop", content: lang })}>shop.made-in-akita.com</a></li>
+            <li>{foot.ships}</li>
+            <li><a href={`${base}/${lang}/breweries/`}>{m.akitaTitle}</a></li>
+          </ul></div>
+        </div>
+        <div class="bottom__legal">
+          <span>© {new Date().getFullYear()} Danshiko Lab B.V. · {foot.made}</span>
+          <span>{ui.drink}</span>
+        </div>
+      </div>
+    </footer>
+    <script is:inline>
+      document.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.menubtn'); if (!b) return;
+        var t = b.closest('.top'); var open = t.getAttribute('data-open') === 'true';
+        t.setAttribute('data-open', String(!open)); b.setAttribute('aria-expanded', String(!open));
+      });
+      document.addEventListener('astro:page-load', function () {
+        var box = document.getElementById('sw-consent'); if (!box) return;
         try { if (localStorage.getItem('sw_consent')) return; } catch (e) {}
         box.hidden = false;
-        box.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () {
-          var v = b.getAttribute('data-c'); try { localStorage.setItem('sw_consent', v); } catch (e) {}
+        box.querySelectorAll('button').forEach(function (btn) { btn.addEventListener('click', function () {
+          var v = btn.getAttribute('data-c'); try { localStorage.setItem('sw_consent', v); } catch (e) {}
           if (v === 'granted' && window.gtag) gtag('consent', 'update', { analytics_storage: 'granted' });
           box.hidden = true; }); });
-      })();
-    </script>}
-    <footer class="bottom"><div class="wrap">
-      <span>© {new Date().getFullYear()} Danshiko Lab B.V. · Amsterdam · <a href={SITE.shop}>shop.made-in-akita.com</a></span>
-      <span>{ui.drink}</span>
-    </div></footer>
+      });
+    </script>
   </body>
 </html>

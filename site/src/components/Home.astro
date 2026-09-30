@@ -1,0 +1,90 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import ProductCard from "./ProductCard.astro";
+import Newsletter from "./Newsletter.astro";
+import { SITE, MOD, catLabel, type Lang } from "../config";
+import { weeklyPicks, shopHome } from "../lib/shop";
+import producers from "../data/producers.json";
+const { lang } = Astro.props as { lang: Lang };
+const m = MOD[lang]; const ui = SITE.ui[lang];
+const articles = (await getCollection("articles", (a) => a.data.lang === lang)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const [lead, ...rest] = articles;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const alternates = Object.fromEntries(SITE.langs.map((l) => [l, `${base}/${l}/`]));
+const picks = await weeklyPicks(Math.floor(Date.now() / (7 * 864e5)));
+const loc = { en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang];
+const fmt = (d: Date) => d.toLocaleDateString(loc, { year: "numeric", month: "long", day: "numeric" });
+const fmtDay = (d: Date) => d.toLocaleDateString(loc, { day: "2-digit", month: "short" });
+const fmtYear = (d: Date) => d.toLocaleDateString(loc, { year: "numeric" });
+const href = (a: any) => `${base}/${lang}/${a.data.story}/`;
+const t = {
+  en: { masthead: ["The Sake ", "Wire"], sub: "Japan's sake, shochu, whisky, wine and beer — reported daily for Europe.", issue: "Edition", wire: "The wire", all: "All stories", producers: "The producers", producersSub: "Eleven makers in Akita, northern Japan, behind the bottles we ship from Amsterdam.", empty: "The first stories are being written.", emptySub: "Our desk in Amsterdam files new stories every morning. Come back tomorrow — or subscribe below." },
+  nl: { masthead: ["The Sake ", "Wire"], sub: "Japanse sake, shochu, whisky, wijn en bier — dagelijks verslag voor Europa.", issue: "Editie", wire: "De wire", all: "Alle verhalen", producers: "De makers", producersSub: "Elf makers in Akita, Noord-Japan, achter de flessen die we vanuit Amsterdam verzenden.", empty: "De eerste verhalen worden geschreven.", emptySub: "Onze redactie in Amsterdam publiceert elke ochtend. Kom morgen terug — of schrijf je hieronder in." },
+  de: { masthead: ["The Sake ", "Wire"], sub: "Japans Sake, Shochu, Whisky, Wein und Bier – täglich für Europa.", issue: "Ausgabe", wire: "Der Wire", all: "Alle Beiträge", producers: "Die Produzenten", producersSub: "Elf Hersteller in Akita, Nordjapan, hinter den Flaschen, die wir aus Amsterdam versenden.", empty: "Die ersten Beiträge entstehen gerade.", emptySub: "Unsere Redaktion in Amsterdam veröffentlicht jeden Morgen. Schauen Sie morgen wieder vorbei – oder abonnieren Sie unten." },
+  es: { masthead: ["The Sake ", "Wire"], sub: "Sake, shochu, whisky, vino y cerveza de Japón — cada día, para Europa.", issue: "Edición", wire: "El wire", all: "Todas las historias", producers: "Los productores", producersSub: "Once productores de Akita, en el norte de Japón, detrás de las botellas que enviamos desde Ámsterdam.", empty: "Las primeras historias se están escribiendo.", emptySub: "Nuestra redacción en Ámsterdam publica cada mañana. Vuelve mañana o suscríbete abajo." },
+  ja: { masthead: ["The Sake ", "Wire"], sub: "日本のお酒の今を、毎日ヨーロッパへ。", issue: "最新号", wire: "ワイヤー", all: "すべての記事", producers: "造り手", producersSub: "アムステルダムから届ける、秋田の11の造り手。", empty: "最初の記事を準備しています。", emptySub: "アムステルダムの編集部が毎朝配信します。明日また来てください。" },
+}[lang];
+const today = fmt(new Date());
+---
+<Base lang={lang} title={m.latest} description={SITE.tagline[lang]} alternates={alternates}>
+  <section class="masthead reveal">
+    <h1>{t.masthead[0]}<em>{t.masthead[1]}</em></h1>
+    <div class="masthead__side"><span class="mono">{t.issue} · {today}</span><p>{t.sub}</p></div>
+  </section>
+
+  {lead ? (
+    <section class="lead reveal" style="--d:.08s">
+      <a class="lead__ph" href={href(lead)} aria-hidden="true" tabindex="-1">{lead.data.hero && <img src={lead.data.hero} alt="" fetchpriority="high" />}</a>
+      <div class="lead__body">
+        <div class="dateline">{lead.data.akita && <span class="akita">{ui.akita}</span>}{lead.data.category && <span class="cat">{catLabel(lead.data.category, lang)}</span>}{lead.data.regionEn && !(lead.data.akita && /^akita$/i.test(lead.data.regionEn)) && <span>{lead.data.regionEn}</span>}<time datetime={lead.data.pubDate.toISOString()}>{fmt(lead.data.pubDate)}</time></div>
+        <h2><a href={href(lead)}>{lead.data.title}</a></h2>
+        <p>{lead.data.description}</p>
+        <a class="more" href={href(lead)}>{ui.readMore}</a>
+      </div>
+    </section>
+  ) : (
+    <div class="empty reveal"><span class="ringbig" aria-hidden="true"></span><h2>{t.empty}</h2><p>{t.emptySub}</p></div>
+  )}
+
+  {rest.length > 0 && (
+    <section>
+      <div class="sec"><h2>{t.wire}</h2><a href={`${base}/${lang}/rss.xml`}>RSS →</a></div>
+      <ul class="wire">
+        {rest.map((a) => (
+          <li>
+            <a class="row" href={href(a)}>
+              <span class="row__time"><b>{fmtDay(a.data.pubDate)}</b><span>{fmtYear(a.data.pubDate)}</span></span>
+              <span class="row__body">
+                <h3>{a.data.title}</h3>
+                <p>{a.data.description}</p>
+                <span class="dateline row__tags">{a.data.akita && <span class="akita">{ui.akita}</span>}{a.data.category && <span class="cat">{catLabel(a.data.category, lang)}</span>}{a.data.regionEn && !(a.data.akita && /^akita$/i.test(a.data.regionEn)) && <span>{a.data.regionEn}</span>}</span>
+              </span>
+              <span class="row__ph">{a.data.hero && <img src={a.data.hero} alt="" loading="lazy" />}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <section class="band">
+    <div>
+      <span class="mono">MADE IN AKITA · Amsterdam</span>
+      <h2>{m.brandTitle}</h2>
+      <p>{m.brandText}</p>
+      <div class="acts"><a class="btn btn--paper" href={shopHome({ medium: "brandband", campaign: "home", content: lang })}>{m.brandShop} →</a><a class="btn btn--ghost" href={SITE.about + "?utm_source=sakewire&utm_medium=brandband&utm_campaign=about"}>{m.brandAbout}</a></div>
+    </div>
+    {picks.length > 0 && <div><span class="mono">{m.weekly} · {m.weeklySub}</span><div class="stack" style="margin-top:10px">{picks.map((p) => <ProductCard p={p} lang={lang} utm={{ medium: "rail", campaign: "home", content: lang }} compact />)}</div></div>}
+  </section>
+
+  <section>
+    <div class="sec"><h2>{t.producers}</h2><a href={`${base}/${lang}/breweries/`}>{m.akitaTitle} →</a></div>
+    <p class="page-lead" style="margin-bottom:18px;font-size:1.05rem">{t.producersSub}</p>
+    <div class="strip">
+      {producers.map((p) => <a class="tile" href={`${base}/${lang}/breweries/#${p.code}`}><img src={p.image} alt="" loading="lazy" /><span class="mono">{p.category} · {p.place}</span><strong>{lang === "ja" ? p.name_ja : p.name}</strong></a>)}
+    </div>
+  </section>
+
+  <section style="margin-top:clamp(32px,5vw,56px);max-width:520px"><Newsletter lang={lang} /></section>
+</Base>

@@ -1,0 +1,17 @@
+---
+import Base from "../layouts/Base.astro";
+import Newsletter from "./Newsletter.astro";
+import { SITE, MOD, type Lang } from "../config";
+const { lang } = Astro.props as { lang: Lang };
+const m = MOD[lang];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const alternates = Object.fromEntries(SITE.langs.map((l) => [l, `${base}/${l}/events/`]));
+const t = { en: ["Tastings, competitions and festivals", "Two-way listings are coming: sake events in Europe for readers here, and Japan's events for readers there."], nl: ["Proeverijen, wedstrijden en festivals", "Tweerichtingsagenda in de maak: sake-evenementen in Europa voor lezers hier, en Japanse evenementen voor lezers daar."], de: ["Verkostungen, Wettbewerbe und Festivals", "Ein Kalender in beide Richtungen entsteht: Sake-Events in Europa für Leser hier, Japans Events für Leser dort."], es: ["Catas, concursos y festivales", "Estamos preparando una agenda en dos direcciones: eventos de sake en Europa para los lectores de aquí, y los de Japón para los de allí."], ja: ["試飲会・コンクール・祭り", "双方向のイベント情報を準備中：海外のイベントを日本の読者へ、日本のイベントを海外の読者へ。"] }[lang];
+---
+<Base lang={lang} title={m.events} description={m.eventsSoon} alternates={alternates}>
+  <header class="reveal"><span class="mono">Europe · Japan</span><h1 class="page-title">{m.events}</h1><p class="page-lead">{t[0]}</p></header>
+  <div class="cols">
+    <div class="empty reveal" style="--d:.1s"><span class="ringbig" aria-hidden="true"></span><h2>{m.events}</h2><p>{t[1]}</p></div>
+    <aside class="rail"><Newsletter lang={lang} /></aside>
+  </div>
+</Base>

@@ -1,0 +1,64 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../layouts/Base.astro";
+import ProductCard from "./ProductCard.astro";
+import Newsletter from "./Newsletter.astro";
+import { SITE, MOD, catLabel, type Lang } from "../config";
+import { pickFor, weeklyPicks, shopHome } from "../lib/shop";
+const { a, lang } = Astro.props as { a: any; lang: Lang };
+const m = MOD[lang]; const ui = SITE.ui[lang];
+const { Content, headings } = await render(a);
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siblings = await getCollection("articles", (x) => x.data.story === a.data.story);
+const alternates = Object.fromEntries(siblings.map((x) => [x.data.lang, `${base}/${x.data.lang}/${x.data.story}/`]));
+const loc = { en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang];
+const fmt = (d: Date) => d.toLocaleDateString(loc, { year: "numeric", month: "long", day: "numeric" });
+const fmtDay = (d: Date) => d.toLocaleDateString(loc, { day: "2-digit", month: "short" });
+const fmtYear = (d: Date) => d.toLocaleDateString(loc, { year: "numeric" });
+const products = await pickFor({ category: a.data.category, tags: a.data.tags, title: a.data.title, description: a.data.description, akita: a.data.akita }, 2, a.data.story);
+const picks = await weeklyPicks(Math.floor(Date.now() / (7 * 864e5)));
+const related = (await getCollection("articles", (x) => x.data.lang === lang && x.data.story !== a.data.story)).sort((x, y) => y.data.pubDate.valueOf() - x.data.pubDate.valueOf()).slice(0, 4);
+const pageUrl = new URL(`${base}/${lang}/${a.data.story}/`, Astro.site).toString();
+const h2s = headings.filter((h) => h.depth === 2);
+const utm = { medium: "article", campaign: a.data.story, content: lang };
+const cta = { medium: "article_cta", campaign: a.data.story, content: lang };
+const isAI = (c?: string) => !!c && /AI生成|AI-generated|AI-gegenereerd|KI-generiert|generada con IA/.test(c);
+const desk = { en: "The Sake Wire desk · Amsterdam", nl: "Redactie The Sake Wire · Amsterdam", de: "Redaktion The Sake Wire · Amsterdam", es: "Redacción The Sake Wire · Ámsterdam", ja: "The Sake Wire 編集部 · アムステルダム" }[lang];
+---
+<Base lang={lang} title={a.data.title} description={a.data.description} ogImage={a.data.hero} alternates={alternates} type="article">
+  <article class="article">
+    <header class="article__head reveal">
+      <div class="dateline">{a.data.akita && <span class="akita">{ui.akita}</span>}{a.data.category && <span class="cat">{catLabel(a.data.category, lang)}</span>}{a.data.regionEn && !(a.data.akita && /^akita$/i.test(a.data.regionEn)) && <span>{a.data.regionEn}</span>}<time datetime={a.data.pubDate.toISOString()}>{fmt(a.data.pubDate)}</time></div>
+      <h1>{a.data.title}</h1>
+      <p class="standfirst">{a.data.description}</p>
+      <div class="byline"><span class="ring" aria-hidden="true"></span><span>{desk}</span></div>
+    </header>
+    <div class="cols">
+      <div>
+        {a.data.hero && <figure class="hero reveal" style="--d:.08s"><div class="hero__ph"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} fetchpriority="high" />{isAI(a.data.heroCredit) && <span class="ai-badge" title={a.data.heroCredit}>AI</span>}</div>{a.data.heroCredit && !isAI(a.data.heroCredit) && <figcaption>{a.data.heroAlt ? `${a.data.heroAlt} — ` : ""}{a.data.heroCredit}</figcaption>}</figure>}
+        <div class="body"><Content /></div>
+        {products.length > 0 && (
+          <aside class="taste"><h3>{m.taste}</h3><p class="sub">{m.tasteSub}</p><div class="grid2">{products.map((p) => <ProductCard p={p} lang={lang} utm={utm} />)}</div></aside>
+        )}
+        <div class="sources">
+          <h2>{ui.sources}</h2>
+          <ul>{(a.data.sources.length ? a.data.sources : [{ name: a.data.sourceName, title: a.data.sourceTitle, url: a.data.sourceUrl }]).map((s: any) => <li><a href={s.url} rel="nofollow noopener" target="_blank">{s.name ? `${s.name}「${s.title ?? s.url}」` : (s.title ?? s.url)}</a></li>)}</ul>
+          <p>{ui.sourcesNote}</p>
+        </div>
+        <div class="cta2"><div><h3>{m.ctaTitle}</h3><p>{m.ctaText}</p></div><a class="btn btn--paper" href={shopHome(cta)}>{m.ctaBtn} →</a></div>
+      </div>
+      <aside class="rail">
+        {h2s.length > 0 && <nav class="toc"><h3>{m.toc}</h3>{h2s.map((h) => <a href={`#${h.slug}`}>{h.text}</a>)}</nav>}
+        {picks.length > 0 && <div><h3>{m.weekly}</h3><p class="sub">{m.weeklySub}</p><div class="stack">{picks.map((p) => <ProductCard p={p} lang={lang} utm={{ medium: "rail", campaign: a.data.story, content: lang }} compact />)}</div></div>}
+        <Newsletter lang={lang} />
+        <div><h3>{m.share}</h3><div class="share"><a href={`https://wa.me/?text=${encodeURIComponent(a.data.title + " " + pageUrl)}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://x.com/intent/tweet?text=${encodeURIComponent(a.data.title)}&url=${encodeURIComponent(pageUrl)}`} target="_blank" rel="noopener">X</a><a href={`https://www.threads.com/intent/post?text=${encodeURIComponent(a.data.title + " " + pageUrl)}`} target="_blank" rel="noopener">Threads</a><a href={`mailto:?subject=${encodeURIComponent(a.data.title)}&body=${encodeURIComponent(pageUrl)}`}>Email</a></div></div>
+      </aside>
+    </div>
+  </article>
+  {related.length > 0 && (
+    <section class="related">
+      <div class="sec"><h2>{m.related}</h2><a href={`${base}/${lang}/`}>{ui.allNews} →</a></div>
+      <ul class="wire">{related.map((r) => <li><a class="row" href={`${base}/${lang}/${r.data.story}/`}><span class="row__time"><b>{fmtDay(r.data.pubDate)}</b><span>{fmtYear(r.data.pubDate)}</span></span><span class="row__body"><h3>{r.data.title}</h3><p>{r.data.description}</p></span><span class="row__ph">{r.data.hero && <img src={r.data.hero} alt="" loading="lazy" />}</span></a></li>)}</ul>
+    </section>
+  )}
+</Base>
