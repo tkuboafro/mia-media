@@ -23,6 +23,8 @@ const h2s = headings.filter((h) => h.depth === 2);
 const utm = { medium: "article", campaign: a.data.story, content: lang };
 const cta = { medium: "article_cta", campaign: a.data.story, content: lang };
 const isAI = (c?: string) => !!c && /AI生成|AI-generated|AI-gegenereerd|KI-generiert|generada con IA/.test(c);
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const linkCredit = (s: string) => esc(s).replace(/(\s*)([^&;（）()—:：]+?)&lt;(https?:\/\/[^\s]+?)&gt;/g, (_m, sp, t, u) => `${sp}<a href="${u}" rel="noopener" target="_blank">${t.trim()}</a>`);
 const desk = { en: "The Sake Wire desk · Amsterdam", nl: "Redactie The Sake Wire · Amsterdam", de: "Redaktion The Sake Wire · Amsterdam", es: "Redacción The Sake Wire · Ámsterdam", ja: "The Sake Wire 編集部 · アムステルダム" }[lang];
 ---
 <Base lang={lang} title={a.data.title} description={a.data.description} ogImage={a.data.hero} alternates={alternates} type="article">
@@ -35,7 +37,7 @@ const desk = { en: "The Sake Wire desk · Amsterdam", nl: "Redactie The Sake Wir
     </header>
     <div class="cols">
       <div>
-        {a.data.hero && <figure class="hero reveal" style="--d:.08s"><div class="hero__ph"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} fetchpriority="high" />{isAI(a.data.heroCredit) && <span class="ai-badge" title={a.data.heroCredit}>AI</span>}</div>{a.data.heroCredit && !isAI(a.data.heroCredit) && <figcaption>{a.data.heroAlt ? `${a.data.heroAlt} — ` : ""}{a.data.heroCredit}</figcaption>}</figure>}
+        {a.data.hero && <figure class="hero reveal" style="--d:.08s"><div class="hero__ph"><img src={a.data.hero} alt={a.data.heroAlt ?? ""} fetchpriority="high" />{isAI(a.data.heroCredit) && <span class="ai-badge" title={a.data.heroCredit}>AI</span>}</div>{a.data.heroCredit && !isAI(a.data.heroCredit) && <figcaption>{a.data.heroAlt ? `${a.data.heroAlt} — ` : ""}<Fragment set:html={linkCredit(a.data.heroCredit)} /></figcaption>}</figure>}
         <div class="body"><Content /></div>
         {products.length > 0 && (
           <aside class="taste"><h3>{m.taste}</h3><p class="sub">{m.tasteSub}</p><div class="grid2">{products.map((p) => <ProductCard p={p} lang={lang} utm={utm} />)}</div></aside>

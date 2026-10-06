@@ -36,6 +36,14 @@ def rehost_generated(slug, meta):
     meta.clear(); meta.update(json.loads(blob))
     return [os.path.join(SITE, "public", local.lstrip("/")) for local in mapping.values()]
 
+LINK = re.compile(r"(\s*)([^&;（）()—:：]+?)&lt;(https?://[^&\s]+(?:&amp;[^&\s]+)*?)&gt;")
+def link_credit(esc):
+    """エスケープ済みクレジット中の「名前<URL>」をリンクにする（Unsplash 規約の撮影者・Unsplash リンク）。"""
+    out = LINK.sub(lambda m: f'{m.group(1)}<a href="{m.group(3)}" rel="noopener" target="_blank">{m.group(2).strip()}</a>', esc)
+    if "Unsplash" in out and "unsplash.com" not in out:  # リンク対応前の下書き: 少なくとも Unsplash へはリンクする
+        out = out.replace("Unsplash", '<a href="https://unsplash.com/?utm_source=the_sake_wire&amp;utm_medium=referral" rel="noopener" target="_blank">Unsplash</a>')
+    return out
+
 def render_media(md, L="ja"):
     """[[youtube:...]] などを埋め込み HTML に。YouTube は youtube-nocookie、X/Instagram は公式ウィジェット。"""
     need = set()
@@ -49,7 +57,7 @@ def render_media(md, L="ja"):
             cap = _html.escape(rest[1].strip()) if len(rest) > 1 else ""; cred = _html.escape(local_credit(L, rest[2].strip())) if len(rest) > 2 else ""
             if len(rest) > 2 and "AI生成" in rest[2]:
                 return f'<figure class="embed embed--image embed--ai"><img src="{url}" alt="{cap}" loading="lazy" /><span class="ai-badge" title="{cred}">AI</span></figure>'
-            return f'<figure class="embed embed--image"><img src="{url}" alt="{cap}" loading="lazy" /><figcaption>{cap}{(" — " + cred) if cred else ""}</figcaption></figure>'
+            return f'<figure class="embed embed--image"><img src="{url}" alt="{cap}" loading="lazy" /><figcaption>{cap}{(" — " + link_credit(cred)) if cred else ""}</figcaption></figure>'
         if kind == "x":
             need.add("x"); return f'<figure class="embed embed--social"><blockquote class="twitter-tweet"><a href="{url}">{url}</a></blockquote></figure>'
         if kind == "instagram":

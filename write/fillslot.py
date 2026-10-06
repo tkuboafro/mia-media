@@ -15,7 +15,7 @@ def find(queries, prompt, caption):
         for c in stock.search(q, 4):
             if c["url"] in seen: continue
             seen.add(c["url"])
-            if stock.vet(c["url"], desc): return c["url"], c["credit"]
+            if stock.vet(c["url"], desc): stock.track(c); return c["url"], c["credit"]
     for _ in range(3):
         u = genimg.try_generate(prompt)
         if u and stock.vet(u, desc): return u, genimg.CREDIT_JA

@@ -23,6 +23,8 @@ def _get(url, headers=None):
 
 def _toks(s): return {t for t in re.findall(r"[a-z]{3,}", (s or "").lower()) if t not in STOP}
 
+UTM = "utm_source=the_sake_wire&utm_medium=referral"
+
 def openverse(q, n):
     d = _get(f"https://api.openverse.org/v1/images/?{urllib.parse.urlencode({'q': q, 'license_type': 'commercial', 'page_size': n * 2, 'mature': 'false'})}")
     out = []
@@ -46,7 +48,16 @@ def unsplash(q, n):
     if not k: return []
     d = _get(f"https://api.unsplash.com/search/photos?{urllib.parse.urlencode({'query': q, 'per_page': n, 'orientation': 'landscape', 'content_filter': 'high'})}", {"Authorization": f"Client-ID {k}"})
     return [{"url": p["urls"]["regular"], "width": p["width"], "height": p["height"], "title": p.get("description") or p.get("alt_description") or "",
-             "tags": " ".join(t.get("title", "") for t in p.get("tags", [])), "credit": f"写真: {p['user']['name']}（Unsplash）", "page": p["links"]["html"], "provider": "unsplash"} for p in d.get("results", [])]
+             "tags": " ".join(t.get("title", "") for t in p.get("tags", [])),
+             # Unsplash API 規約: 撮影者と Unsplash へのリンク（utm 付き）を表示し、使った写真は download_location を叩く
+             "credit": f"写真: {p['user']['name']}<{p['user']['links']['html']}?{UTM}>（Unsplash<https://unsplash.com/?{UTM}>）",
+             "page": p["links"]["html"], "dl": p["links"].get("download_location"), "provider": "unsplash"} for p in d.get("results", [])]
+
+def track(c):
+    """採用した素材の利用を提供元に通知する（現状は Unsplash のみ必須）。失敗しても記事は止めない。"""
+    if c and c.get("provider") == "unsplash" and c.get("dl"):
+        try: _get(c["dl"], {"Authorization": f"Client-ID {_env('UNSPLASH_KEY')}"})
+        except Exception as e: print(f"[stock] unsplash track: {e}", file=sys.stderr)
 
 def pixabay(q, n):
     k = _env("PIXABAY_KEY")
@@ -105,7 +116,7 @@ def vet(url, desc):
 def pick(q, desc=None, n=3):
     """検索語で探し、上位 n 件を順に検品して最初に通ったものを返す。desc: 何を見せたいか（日本語可）。"""
     for c in search(q, n):
-        if desc is None or vet(c["url"], desc): return c
+        if desc is None or vet(c["url"], desc): track(c); return c
     return None
 
 if __name__ == "__main__":
