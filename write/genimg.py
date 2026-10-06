@@ -36,6 +36,9 @@ def generate(prompt, size="landscape_16_9"):
     return imgs[0]["url"]
 
 def try_generate(prompt, size="landscape_16_9"):
+    # 久保さん 2026-10-06「生成画像は全般に品質が悪い。引用・フリー素材・実写の物撮りを使う」→ 生成は既定で停止。
+    # 試験的に使うときだけ MIA_ALLOW_GEN=1。
+    if os.environ.get("MIA_ALLOW_GEN") != "1": return None
     try: return generate(prompt, size)
     except FalError as e:
         print(f"[genimg] 生成できず: {e}", file=sys.stderr); return None
