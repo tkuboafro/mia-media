@@ -1,6 +1,6 @@
 ---
 title: "Shiga brewery that stopped making sake returns with new Ko no Homare"
-description: "Shiga brewery Yamaoka Shuzo, idle since 2018, is back under ex-trading partner Takeshi Ibuki and others with Ko no Homare, a new sake from local rice."
+description: "Shiga brewery Yamaoka Shuzo, which halted sake brewing in 2018, has relaunched under former trading partner Ken Ibuki and others with local-rice Ko no Homare."
 pubDate: "2026-09-28"
 lang: "en"
 story: "2026-09-28-shiga-yamaoka-shuzo-revival-ko-no-homare-junmai-ginjo"
@@ -18,28 +18,28 @@ heroAlt: "静かな湖のほとりに広がる田園風景"
 heroCredit: "Photo: kai muro<https://unsplash.com/@turuturu?utm_source=the_sake_wire&utm_medium=referral> (Unsplash<https://unsplash.com/?utm_source=the_sake_wire&utm_medium=referral>)"
 ---
 
-Shiga Prefecture, Kyoto's eastern neighbour, is home to Lake Biwa, the largest lake in Japan. In the north of the prefecture, in Takatsuki-cho in the city of Nagahama, Yamaoka Shuzo has started brewing sake again after once giving it up. In January 2026 the brewery released Ko no Homare ('Pride of the Lake') Junmai Ginjo, the first new sake under its new management. At one point closure was on the cards. The person who saved the brewery was neither a member of the brewing family nor a sake-making specialist, but someone who had once done business with it as a company employee.
+Shiga Prefecture lies just east of Kyoto and is home to Lake Biwa, Japan's largest lake. In Takatsuki-cho, in the city of Nagahama in the north of the prefecture, the brewery Yamaoka Shuzo has started making sake again after once giving it up. In January 2026 it released the first new sake made under its new management, “Ko no Homare Junmai Ginjo”. At one point the brewery was close to shutting down. It was saved by someone who was neither from the brewing family nor a sake-making specialist, but who had once dealt with the brewery as a company employee.
 
-## A crisis at a 150-year-old brewery
+## Crisis at a brewery with 150 years of history
 
-Yamaoka Shuzo was founded in 1873. Despite more than 150 years of history, its brewers were growing older, and in 2018 it temporarily stopped making its own sake. The fourth-generation head, Jinzo Yamaoka (89), had no successor and was reportedly considering closing the brewery.
+Yamaoka Shuzo was founded in 1873. It has more than 150 years of history, but its brewers were getting older, and in 2018 it temporarily stopped making its own sake. The fourth-generation head, Jinzo Yamaoka (89), had no successor and is said to have been considering closing the brewery.
 
-In Japan today, the shortage of successors at small sake breweries is a serious problem. Many breweries are family-run, and if the next generation does not take over, brands with long histories simply disappear. Yamaoka Shuzo was one of the breweries heading down that path.
+In Japan today, small sake breweries struggling to find successors has become a major problem. Many breweries are family-run, and if the next generation does not take over, brands with long histories simply disappear. Yamaoka Shuzo was one of the breweries heading down that path.
 
-## A former business partner takes over
+## A new set-up under a former trading partner
 
-The business was taken over by Takeshi Ibuki (57) and others. During years as a company employee, Ibuki traded products with Yamaoka Shuzo through work. In other words, someone from outside the industry decided to take on the brewery to protect the value they had come to see in it through those dealings. Brewing under the new management began three years ago, and the scaled-down business is being rebuilt.
+The business was taken over by Ken Ibuki (57) and others. While working as a company employee, Ibuki traded products with Yamaoka Shuzo as part of the job. So someone from outside the industry decided to take over the brewery to protect the value they had come to see in it through those business dealings. Brewing under the new set-up began three years ago, and work to rebuild the business, which had shrunk, is under way.
 
-In Japan, too, it is slowly becoming more common for people from outside the family or from other industries to take over breweries. Brewers who come from outside sometimes produce sakes that are free of the usual conventions, and they are attracting attention as a source of fresh ideas for the industry.
+In Japan, too, more and more breweries are being taken over by people outside the family or from other industries. Brewers who come from outside sometimes make sakes that ignore the old conventions, and they are attracting attention for bringing fresh energy to the industry.
 
-## An easy-drinking junmai ginjo made with local rice
+## An easy-drinking junmai ginjo made from local rice
 
-The new Ko no Homare Junmai Ginjo is made with sake rice grown in Mita-cho, also in Nagahama. 'Junmai ginjo' is sake made only from rice, rice koji and water, with no added brewer's alcohol. The rice is polished down from the outside and fermented slowly at low temperatures. Sakes of this kind often have aromas that recall fruit and flowers.
+The new “Ko no Homare Junmai Ginjo” uses sake rice grown in Mita-cho, also in Nagahama. “Junmai ginjo” means sake made only from rice, rice koji and water, with no added brewer's alcohol. The rice is polished from the outside in and fermented slowly at low temperatures. Sakes of this kind tend to have aromas that suggest fruit or flowers.
 
-This sake is also defined by a vibrant aroma and sweetness. Its alcohol content has been kept lower so that people who are not used to sake can drink it easily.
+This sake, too, stands out for its vibrant aroma and sweetness. Its alcohol content has also been kept lower so that it is easy to drink even for people who are not used to sake.
 
 ## How to enjoy it in Europe
 
 <figure class="embed embed--image"><img src="https://images.unsplash.com/photo-1783628642381-4d3a2a5839d2?crop=entropy&amp;cs=tinysrgb&amp;fit=max&amp;fm=jpg&amp;ixid=M3wxMDg1MTk5fDB8MXxzZWFyY2h8M3x8d2hpdGUlMjB3aW5lJTIwZ2xhc3MlMjBzYWtlfGVufDF8MHx8fDE3OTA1OTgzOTN8MA&amp;ixlib=rb-4.1.0&amp;q=80&amp;w=1080" alt="Chilled sake poured into a wine glass" loading="lazy" /><figcaption>Chilled sake poured into a wine glass — Photo: <a href="https://unsplash.com/@geppi?utm_source=the_sake_wire&amp;utm_medium=referral" rel="noopener" target="_blank">Giuseppe Argenziano</a> (<a href="https://unsplash.com/?utm_source=the_sake_wire&amp;utm_medium=referral" rel="noopener" target="_blank">Unsplash</a>)</figcaption></figure>
 
-So far there is no information that Ko no Homare has reached Europe. Even so, this brewery's story suggests a useful way to choose sake. 'Junmai Ginjo' on the label marks a style meant to be enjoyed for its aroma, and bottles with a lower alcohol content suit sake newcomers or make a good aperitif. Aromatic sakes like this open up when they are lightly chilled and poured into a wine glass. They also go well with fruit-based starters and light fish dishes. Another enjoyable way to see how sake is changing today is to look in sake and wine shops for brands from 'new brewers who have taken over a brewery'.
+There is currently no information that Ko no Homare is available in Europe. Still, this brewery's story offers a useful way of thinking about how to choose a sake. If the label says “Junmai Ginjo”, that is a sign of an aromatic style. Bottles with a lower alcohol content suit people trying sake for the first time and also work well as an aperitif. Aromatic sakes like this open up when lightly chilled and poured into a wine glass. They also go easily with fruit-based starters and light fish dishes. Another enjoyable way to see how sake is changing today is to ask at a sake shop for brands from “new brewers who have taken over a brewery”.
