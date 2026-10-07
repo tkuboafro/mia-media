@@ -69,12 +69,13 @@ def render_media(md, L="ja"):
     return out
 
 def write_md(L, slug, meta, title, description, body_md):
+    # heroAlt は言語ごとの訳（translations[L].hero_alt）を使う。2026-10-07 まで全言語に日本語キャプションが出ていた
     row, ja = meta["row"], meta["ja"]
     fm = {"title": title, "description": description[:200], "pubDate": meta["date"], "lang": L, "story": slug,
           "sourceUrl": row["url"], "sourceTitle": row["title"], "sourceName": row.get("source") or "",
           "region": row.get("region") or "", "regionEn": meta.get("regionEn") or "", "category": row.get("category") or "", "akita": bool(row.get("akita")),
           "tags": ja.get("tags", []), "sources": ja.get("sources", [])}
-    if meta.get("hero"): fm["hero"] = meta["hero"]; fm["heroAlt"] = (meta.get("heroAlt") or "") if L == "ja" else ((meta.get("translations") or {}).get(L, {}).get("hero_alt") or "")   # 2026-10-07: 以前は全言語に日本語のキャプションが出ていた; fm["heroCredit"] = local_credit(L, meta.get("heroCredit") or "")
+    if meta.get("hero"): fm["hero"] = meta["hero"]; fm["heroAlt"] = (meta.get("heroAlt") or "") if L == "ja" else ((meta.get("translations") or {}).get(L, {}).get("hero_alt") or ""); fm["heroCredit"] = local_credit(L, meta.get("heroCredit") or "")
     d = os.path.join(SITE, "src", "content", "articles", L); os.makedirs(d, exist_ok=True)
     path = os.path.join(d, f"{slug}.md")
     open(path, "w").write("---\n" + "\n".join(fm_line(k, v) for k, v in fm.items()) + "\n---\n\n" + render_media(body_md.strip(), L) + "\n")
