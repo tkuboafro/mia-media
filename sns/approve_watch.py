@@ -10,6 +10,12 @@ from slack_post import post
 HOME = os.path.expanduser("~/mia-media"); PUB = "https://sakewire.com"
 CH = os.environ.get("MIA_SLACK_CHANNEL", "C0C27TW71SN")
 
+
+# 🔴 2026-10-07 久保さん「MIA のサイトで X にポストしようとしてない？いったん不要」: 記事公開時の X 自動投稿を止める。戻すときは True
+X_POST_ENABLED = False
+class _XOff(Exception):
+    pass
+
 def slack_ts(page):
     return notion.prop_text(page, "Slackスレッド").strip() or None
 
@@ -102,10 +108,14 @@ def main():
                 post(CH, f"✅ 公開しました（数分で反映）\n日本語: {url}\nEN: {PUB}/en/{slug}/  NL: {PUB}/nl/{slug}/  DE: {PUB}/de/{slug}/  ES: {PUB}/es/{slug}/", ts)
                 # X へ自動投稿（EN）。失敗しても公開は済んでいるので報告だけ
                 try:
+                    if not X_POST_ENABLED:
+                        raise _XOff()
                     import x_post
                     meta = json.load(open(mp)); tid = x_post.post_article(slug, meta, "en")
                     meta["x_post_id"] = tid; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
                     post(CH, f"🐦 X に投稿しました: https://x.com/TheSakeWire/status/{tid}", ts)
+                except _XOff:
+                    pass
                 except Exception as e:
                     post(CH, f"⚠️ X 投稿に失敗: {str(e)[:200]}", ts)
                 try:

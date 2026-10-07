@@ -23,12 +23,13 @@ fi
 echo "CANDIDATES: $($PY -c "import sys;sys.path.insert(0,'write');import pick;print(len(pick.ranked()))" 2>>"$LOG")" | tee -a "$LOG"
 N=${N_ARTICLES:-${1:-30}}
 for i in $(seq 1 $N); do
+  [ -n "${MIA_DEADLINE:-}" ] && [ "$(date +%s)" -ge "$MIA_DEADLINE" ] && { echo "deadline reached" | tee -a "$LOG"; break; }   # 久保さん 2026-10-05「トークンリセットまで量産」
   ROW=$($PY write/pick.py 2>>"$LOG")
   [ -z "$ROW" ] || [ "$ROW" = "null" ] && { echo "no more candidates" | tee -a "$LOG"; break; }
-  echo "$ROW" > data/today.json
-  $PY -c "import json;json.dump({'rows':[json.load(open('data/today.json'))]},open('data/today_news.json','w'),ensure_ascii=False)"
-  URLNOW=$($PY -c "import json;print(json.load(open('data/today.json'))['url'])")
-  SLUG=$($PY write/article_ja.py data/today_news.json 0 2>>"$LOG" | head -1)
+  echo "$ROW" > data/batch_row.json   # 毎朝の run_daily.sh（today.json）と衝突させない
+  $PY -c "import json;json.dump({'rows':[json.load(open('data/batch_row.json'))]},open('data/batch_news.json','w'),ensure_ascii=False)"
+  URLNOW=$($PY -c "import json;print(json.load(open('data/batch_row.json'))['url'])")
+  SLUG=$($PY write/article_ja.py data/batch_news.json 0 2>>"$LOG" | head -1)
   if [ -z "$SLUG" ]; then
     FAILS=$((${FAILS:-0}+1)); echo "write failed ($i) consecutive=$FAILS" | tee -a "$LOG"
     [ "$FAILS" -ge 5 ] && { echo "ABORT: 5 consecutive failures (usage limit?)" | tee -a "$LOG"; break; }
