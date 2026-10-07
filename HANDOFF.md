@@ -23,5 +23,6 @@
 - Unsplash: 規約対応済み（download_location 通知、撮影者＋Unsplash リンク付きクレジット）。本番申請は久保さん本人が送信。
 
 ## 未完了
-- Unsplash 本番申請: 申請用記事「湖の誉」公開済み（/en/2026-09-28-shiga-yamaoka-shuzo-revival-ko-no-homare-junmai-ginjo/）。スクショ・フォーム記入 → 久保さん送信待ち。
+- Unsplash 本番申請: 2026-10-07 フォーム準備完了（スクショ添付済み・常駐ブラウザ tab18）。久保さんが「Apply for production」を押す待ち（Otacon に連絡済み）。通ったら 50→1,000 回/時。
+- 公開まわりの修正（2026-10-07）: publish.py の run() が cwd 二重指定で毎回落ちていた／approve_watch が Slack 429 で落ちていた → どちらも修正、湖の誉で公開確認済み。
 - 確認待ちの下書き 約300本（Notion）。
