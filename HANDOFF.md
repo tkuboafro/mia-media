@@ -1,9 +1,21 @@
 # MIA メディア（The Sake Wire）HANDOFF
 
-最終更新: 2026-10-07（PL セッション）。久保さんへの確認は必ず Otacon 経由（~/work/Python/CLAUDE.md「指示系統」）。
+最終更新: 2026-10-07（PL セッション）。
+
+## 🟡 保留中（2026-10-07 久保さん指示・Otacon 経由）
+「MIA の件は来週火曜の前にトークンが余ったら一気にやるので、置いておいていい」→ **10/13（火）の前まで保留**。
+- 新しい作業・上申はしない。久保さんへの確認も出さない（必要なものはこの HANDOFF に溜める）。再開は久保さんが声をかけたとき。
+- 毎朝の記事作成 `com.danshiko.mia-journal` は Otacon が bootout＋disable 済み。再開時に bootstrap/enable が必要。
+- 承認の見張り `com.danshiko.mia-journal-approve` は稼働のまま（承認が無ければ何もしない）。
+- Unsplash「Apply for production」の #cockpit 依頼は閉じた（申請ページ・常駐ブラウザ tab18 はそのまま）。再開時にもう一度 Otacon から出す。
+
+### 再開時に久保さんへ出すもの（溜め）
+1. Unsplash の「Apply for production」を押してもらう（準備済み）。
+2. 確認待ちの下書き 約300本のレビュー。
+久保さんへの確認は必ず Otacon 経由（~/work/Python/CLAUDE.md「指示系統」）。
 
 ## 現在の運用
-- 記事: 毎朝 05:30 `run_daily.sh` が1本書く → Notion「確認待ち」＋ Slack レビュー依頼。量産（`batch_past.sh`）は久保さんの指示があるときだけ（`MIA_DEADLINE` で締切指定可）。
+- 記事: 毎朝 05:30 `run_daily.sh` が1本書く（2026-10-07 から保留で停止中） → Notion「確認待ち」＋ Slack レビュー依頼。量産（`batch_past.sh`）は久保さんの指示があるときだけ（`MIA_DEADLINE` で締切指定可）。
 - 公開: `sns/approve_watch.py`（launchd 15分毎）が Notion「承認」を拾い `publish.py` で翻訳→ビルド→push。
   - Slack スレッド巡回は1回40本まで（429 対策, 2026-10-07）。
   - Notion 読み戻し時に画像クレジット（Unsplash リンク等）を元原稿から復元。
