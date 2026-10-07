@@ -84,13 +84,14 @@ def search(q, n=6):
     return [x[3] for x in scored[:n]]
 
 VET_MODEL = os.environ.get("VET_MODEL", "opus")  # 久保さん 2026-09-27: 検品は Opus で
+# 久保さん 2026-10-07: 実写（引用・フリー素材）はラベル・銘柄名が読めても可。AI 生成は従来どおり NG（生成自体も停止中）
 VET_PROMPT = ('You are the photo editor of The Sake Wire, a serious European news site about Japanese sake, shochu, wine and beer. '
               'Read the image file {path}. It is proposed as an editorial illustration meant to show: "{desc}".\n'
               'Reject (ok=false) if ANY of these apply: the subject does not match the intent; the scene is clearly not Japan when the intent is place-specific '
-              '(a rice field, brewery, town, festival); readable text, brand names, labels or logos are visible; a person\'s face is prominent; '
+              '(a rice field, brewery, town, festival); a person\'s face is prominent; '
               'the image looks AI-generated or has artifacts (wrong anatomy, melted objects, nonsense writing); it is a low-quality snapshot, watermark, collage or screenshot; '
               'it would mislead readers about the story (e.g. a wine cellar for a sake story, a Scottish castle for a Japanese distillery).\n'
-              'Accept only a photo you would actually run in a printed magazine. Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
+              'Real photos may show readable bottle labels, brand names or brewery signage — that is fine, unless they name a different producer than the story is about. 'Accept only a photo you would actually run in a printed magazine. Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
 
 def vet(url, desc):
     """Opus に画像を見せて可否を判定。判定不能なら False（安全側）。"""
