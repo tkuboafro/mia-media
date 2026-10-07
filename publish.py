@@ -80,13 +80,18 @@ def write_md(L, slug, meta, title, description, body_md):
     open(path, "w").write("---\n" + "\n".join(fm_line(k, v) for k, v in fm.items()) + "\n---\n\n" + render_media(body_md.strip(), L) + "\n")
     return path
 
-def run(*a, **k): return subprocess.run(a, capture_output=True, text=True, cwd=HOME, **k)
+def run(*a, **k):
+    k.setdefault("cwd", HOME)   # build は cwd=SITE を渡す（以前は cwd が二重指定になり TypeError で公開が落ちていた）
+    return subprocess.run(a, capture_output=True, text=True, **k)
 
 def main(slug):
     mp = os.path.join(HOME, "data", f"article_{slug}.json"); meta = json.load(open(mp)); ja = meta["ja"]
     from article import region_en
     meta["regionEn"] = region_en(meta["row"].get("region"))
-    tr = translate(ja); meta["translations"] = tr
+    import hashlib
+    src = hashlib.sha1(json.dumps([ja.get("title"), ja.get("lead"), ja.get("body_md")], ensure_ascii=False).encode()).hexdigest()
+    if meta.get("translations") and meta.get("translated_from") == src: tr = meta["translations"]   # 公開の再試行で翻訳をやり直さない
+    else: tr = translate(ja); meta["translations"] = tr; meta["translated_from"] = src
     imgs = rehost_generated(slug, meta); ja, tr = meta["ja"], meta["translations"]
     json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
     paths = [write_md("ja", slug, meta, ja["title"], ja["lead"], ja["body_md"])]
