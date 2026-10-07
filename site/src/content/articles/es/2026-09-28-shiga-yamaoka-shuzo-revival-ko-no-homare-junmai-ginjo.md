@@ -15,6 +15,7 @@ tags: ["sake", "brewery succession", "Shiga", "junmai ginjo", "low alcohol sake"
 sources: [{"name": "", "title": "中日新聞「一時日本酒製造休止の酒造が再起 山岡酒造が新作「湖の誉」販売」", "url": "https://www.chunichi.co.jp/article/1278463"}]
 hero: "https://images.unsplash.com/photo-1765328682673-7f70864d023c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMDg1MTk5fDB8MXxzZWFyY2h8M3x8bGFrZSUyMHJpY2UlMjBmaWVsZHMlMjBKYXBhbnxlbnwxfDB8fHwxNzkwNjA1NjAzfDA&ixlib=rb-4.1.0&q=80&w=1080"
 heroAlt: "Paisaje rural que se extiende a orillas de un lago tranquilo"
+heroCredit: "Foto: kai muro<https://unsplash.com/@turuturu?utm_source=the_sake_wire&utm_medium=referral> (Unsplash<https://unsplash.com/?utm_source=the_sake_wire&utm_medium=referral>)"
 ---
 
 La prefectura de Shiga está justo al este de Kioto y alberga el lago Biwa, el mayor de Japón. En Takatsuki-cho, en la ciudad de Nagahama, al norte de la prefectura, la bodega Yamaoka Shuzo ha vuelto a elaborar sake después de haberlo dejado. En enero de 2026 lanzó el primer sake nuevo de la nueva dirección: «Ko no Homare Junmai Ginjo». Hubo un momento en que la bodega estuvo a punto de cerrar. Quien la salvó no fue nadie de la familia propietaria ni un experto en sake, sino una persona que, como empleada de una empresa, había hecho negocios con la bodega.
