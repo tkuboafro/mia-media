@@ -27,6 +27,26 @@ def thread_feedback(ts, after_ts):
     msgs = [m for m in d.get("messages", []) if m.get("user") == APPROVER and m.get("ts") != ts and float(m.get("ts", 0)) > float(after_ts or 0)]
     return msgs
 
+import re
+IMG = re.compile(r"^\[\[image:([^\]]+)\]\]$", re.M)
+CREDIT_HINT = re.compile(r"(写真[:：]|画像提供|Unsplash|Pexels|Pixabay|CC BY|CC0|Wikimedia|Flickr)")
+def restore_credits(new_md, old_md):
+    """Notion から読み戻した本文は画像クレジットが「キャプション / クレジット」に混ざりリンクも消える。
+    元原稿の同じ画像 URL のクレジット（Unsplash の撮影者リンク等）を付け直す。"""
+    old = {}
+    for m in IMG.finditer(old_md or ""):
+        parts = m.group(1).split("|"); old[parts[0].strip()] = parts
+    def fix(m):
+        parts = m.group(1).split("|"); u = parts[0].strip(); cap = parts[1].strip() if len(parts) > 1 else ""
+        if u not in old: return m.group(0)
+        o = old[u]; ocred = o[2].strip() if len(o) > 2 else ""
+        if " / " in cap and CREDIT_HINT.search(cap.rsplit(" / ", 1)[1]): cap = cap.rsplit(" / ", 1)[0].strip()
+        return f"[[image:{u}|{cap}|{ocred}]]" if ocred else f"[[image:{u}|{cap}]]"
+    return IMG.sub(fix, new_md)
+
+THREAD_CHECKS_PER_RUN = 40   # Slack conversations.replies の回数制限（429）対策。確認待ちが数百本でも少しずつ巡回する
+OFFSET_FILE = os.path.join(HOME, "data", "approve_thread_offset.txt")
+
 def classify(text):
     t = text.strip()
     if len(t) <= 12 and any(w in t for w in OK_WORDS): return "ok"
@@ -39,14 +59,26 @@ def main():
     except Exception as e:
         # 統合（myfans_weekly_bot）が DB に接続されていないと 404。久保さんが Notion 側で「接続」を足すまで待つ
         print("notion not reachable:", str(e)[:200]); return
-    for page in pages:
+    # 承認・差戻しのページを先に処理し、Slack スレッドの巡回は1回あたり上限付きで順番に回す
+    try: off = int(open(OFFSET_FILE).read().strip())
+    except Exception: off = 0
+    waiting = [p for p in pages if notion.prop_select(p, "ステータス") == "確認待ち"]
+    others = [p for p in pages if notion.prop_select(p, "ステータス") != "確認待ち"]
+    if waiting: off %= len(waiting); waiting = waiting[off:] + waiting[:off]
+    to_check = {p["id"] for p in waiting[:THREAD_CHECKS_PER_RUN]}
+    try: open(OFFSET_FILE, "w").write(str(off + THREAD_CHECKS_PER_RUN))
+    except Exception: pass
+    slack_ok = True
+    for page in others + waiting:
         slug = notion.prop_text(page, "記事キー").strip(); st = notion.prop_select(page, "ステータス"); pid = page["id"]
         mp = f"{HOME}/data/article_{slug}.json"
         if not slug or not os.path.exists(mp): print("skip (no meta)", slug, st); continue
         meta = json.load(open(mp)); ts = slack_ts(page)
         # Slack スレッドの返信 → 承認 / 見送り / 差戻しコメント として扱う（Notion を開かなくても回るように）
-        if st == "確認待ち" and ts:
-            new = thread_feedback(ts, meta.get("last_feedback_ts"))
+        if st == "確認待ち" and ts and slack_ok and pid in to_check:
+            try: new = thread_feedback(ts, meta.get("last_feedback_ts"))
+            except Exception as e:
+                print("slack thread check stopped:", str(e)[:120]); slack_ok = False; new = []
             if new:
                 meta["last_feedback_ts"] = new[-1]["ts"]; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
                 kinds = [classify(m.get("text", "")) for m in new]
@@ -59,7 +91,7 @@ def main():
         if st == "承認":
             ja = notion.read_ja(pid)
             if ja["title"] and ja["body_md"]:
-                meta["ja"].update({"title": ja["title"], "lead": ja["lead"] or meta["ja"]["lead"], "body_md": ja["body_md"]})
+                meta["ja"].update({"title": ja["title"], "lead": ja["lead"] or meta["ja"]["lead"], "body_md": restore_credits(ja["body_md"], meta["ja"].get("body_md"))})
                 if ja["sources"]: meta["ja"]["sources"] = [s for s in ja["sources"] if s.get("url")] or meta["ja"]["sources"]
                 json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
             notion.set_props(pid, status="制作中")   # 二重処理防止
