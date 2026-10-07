@@ -14,8 +14,7 @@ akita: false
 tags: ["sake", "brewery succession", "Shiga", "junmai ginjo", "low alcohol sake", "craft revival"]
 sources: [{"name": "", "title": "中日新聞「一時日本酒製造休止の酒造が再起 山岡酒造が新作「湖の誉」販売」", "url": "https://www.chunichi.co.jp/article/1278463"}]
 hero: "https://images.unsplash.com/photo-1765328682673-7f70864d023c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMDg1MTk5fDB8MXxzZWFyY2h8M3x8bGFrZSUyMHJpY2UlMjBmaWVsZHMlMjBKYXBhbnxlbnwxfDB8fHwxNzkwNjA1NjAzfDA&ixlib=rb-4.1.0&q=80&w=1080"
-heroAlt: "静かな湖のほとりに広がる田園風景"
-heroCredit: "Foto: kai muro<https://unsplash.com/@turuturu?utm_source=the_sake_wire&utm_medium=referral> (Unsplash<https://unsplash.com/?utm_source=the_sake_wire&utm_medium=referral>)"
+heroAlt: "Ländliche Landschaft, die sich am Ufer eines ruhigen Sees ausbreitet"
 ---
 
 Die Präfektur Shiga liegt direkt östlich von Kyoto und beherbergt den Biwa-See, den größten See Japans. In Takatsuki-cho in der Stadt Nagahama im Norden der Präfektur braut die Brauerei Yamaoka Shuzo wieder Sake, nachdem sie zwischenzeitlich damit aufgehört hatte. Im Januar 2026 brachte sie die erste neue Sorte unter der neuen Führung heraus: „Ko no Homare Junmai Ginjo“. Zeitweise stand die Brauerei kurz vor dem Aus. Gerettet hat sie weder jemand aus der Brauerfamilie noch ein Fachmann fürs Sakebrauen, sondern eine Person, die früher als Angestellte eines Unternehmens mit der Brauerei Geschäfte gemacht hatte.

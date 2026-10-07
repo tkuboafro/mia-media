@@ -15,7 +15,6 @@ tags: ["sake", "brewery succession", "Shiga", "junmai ginjo", "low alcohol sake"
 sources: [{"name": "", "title": "中日新聞「一時日本酒製造休止の酒造が再起 山岡酒造が新作「湖の誉」販売」", "url": "https://www.chunichi.co.jp/article/1278463"}]
 hero: "https://images.unsplash.com/photo-1765328682673-7f70864d023c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMDg1MTk5fDB8MXxzZWFyY2h8M3x8bGFrZSUyMHJpY2UlMjBmaWVsZHMlMjBKYXBhbnxlbnwxfDB8fHwxNzkwNjA1NjAzfDA&ixlib=rb-4.1.0&q=80&w=1080"
 heroAlt: "静かな湖のほとりに広がる田園風景"
-heroCredit: "写真: kai muro<https://unsplash.com/@turuturu?utm_source=the_sake_wire&utm_medium=referral>（Unsplash<https://unsplash.com/?utm_source=the_sake_wire&utm_medium=referral>）"
 ---
 
 滋賀県は、日本最大の湖である琵琶湖を抱える京都の東隣の県です。その北部、長浜市高月町にある山岡酒造が、一度は止めた日本酒造りを再び始めました。2026年1月には新体制で初めての新作「湖の誉（こ の ほまれ）純米吟醸」を発売しています。一時は廃業も考えた蔵を救ったのは、蔵の家系の人でも酒造りの専門家でもなく、かつて会社員としてこの蔵と取引をしていた人物でした。

@@ -14,8 +14,7 @@ akita: false
 tags: ["sake", "brewery succession", "Shiga", "junmai ginjo", "low alcohol sake", "craft revival"]
 sources: [{"name": "", "title": "中日新聞「一時日本酒製造休止の酒造が再起 山岡酒造が新作「湖の誉」販売」", "url": "https://www.chunichi.co.jp/article/1278463"}]
 hero: "https://images.unsplash.com/photo-1765328682673-7f70864d023c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMDg1MTk5fDB8MXxzZWFyY2h8M3x8bGFrZSUyMHJpY2UlMjBmaWVsZHMlMjBKYXBhbnxlbnwxfDB8fHwxNzkwNjA1NjAzfDA&ixlib=rb-4.1.0&q=80&w=1080"
-heroAlt: "静かな湖のほとりに広がる田園風景"
-heroCredit: "Foto: kai muro<https://unsplash.com/@turuturu?utm_source=the_sake_wire&utm_medium=referral> (Unsplash<https://unsplash.com/?utm_source=the_sake_wire&utm_medium=referral>)"
+heroAlt: "Landelijk landschap dat zich uitstrekt langs de oever van een stil meer"
 ---
 
 Shiga ligt direct ten oosten van Kyoto en is de prefectuur van het Biwameer, het grootste meer van Japan. In Takatsuki-cho, in de stad Nagahama in het noorden van de prefectuur, is de brouwerij Yamaoka Shuzo weer sake gaan maken, nadat ze daar eerder mee was gestopt. In januari 2026 bracht de brouwerij de eerste nieuwe sake onder de nieuwe leiding uit: ‘Ko no Homare Junmai Ginjo’. Een tijdlang stond de brouwerij op het punt te sluiten. De redding kwam niet van iemand uit de brouwersfamilie of van een sake-specialist, maar van iemand die als werknemer van een bedrijf ooit zaken met de brouwerij had gedaan.

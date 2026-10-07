@@ -14,8 +14,7 @@ akita: false
 tags: ["sake", "brewery succession", "Shiga", "junmai ginjo", "low alcohol sake", "craft revival"]
 sources: [{"name": "", "title": "中日新聞「一時日本酒製造休止の酒造が再起 山岡酒造が新作「湖の誉」販売」", "url": "https://www.chunichi.co.jp/article/1278463"}]
 hero: "https://images.unsplash.com/photo-1765328682673-7f70864d023c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMDg1MTk5fDB8MXxzZWFyY2h8M3x8bGFrZSUyMHJpY2UlMjBmaWVsZHMlMjBKYXBhbnxlbnwxfDB8fHwxNzkwNjA1NjAzfDA&ixlib=rb-4.1.0&q=80&w=1080"
-heroAlt: "静かな湖のほとりに広がる田園風景"
-heroCredit: "Photo: kai muro<https://unsplash.com/@turuturu?utm_source=the_sake_wire&utm_medium=referral> (Unsplash<https://unsplash.com/?utm_source=the_sake_wire&utm_medium=referral>)"
+heroAlt: "Rural scenery spreading along the shore of a quiet lake"
 ---
 
 Shiga Prefecture lies just east of Kyoto and is home to Lake Biwa, Japan's largest lake. In Takatsuki-cho, in the city of Nagahama in the north of the prefecture, the brewery Yamaoka Shuzo has started making sake again after once giving it up. In January 2026 it released the first new sake made under its new management, “Ko no Homare Junmai Ginjo”. At one point the brewery was close to shutting down. It was saved by someone who was neither from the brewing family nor a sake-making specialist, but who had once dealt with the brewery as a company employee.
