@@ -91,7 +91,8 @@ VET_PROMPT = ('You are the photo editor of The Sake Wire, a serious European new
               '(a rice field, brewery, town, festival); a person\'s face is prominent; '
               'the image looks AI-generated or has artifacts (wrong anatomy, melted objects, nonsense writing); it is a low-quality snapshot, watermark, collage or screenshot; '
               'it would mislead readers about the story (e.g. a wine cellar for a sake story, a Scottish castle for a Japanese distillery).\n'
-              'Real photos may show readable bottle labels, brand names or brewery signage — that is fine, unless they name a different producer than the story is about. 'Accept only a photo you would actually run in a printed magazine. Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
+              'Real photos may show readable bottle labels, brand names or brewery signage — that is fine, unless they name a different producer than the story is about. '
+              'Accept only a photo you would actually run in a printed magazine. Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
 
 def vet(url, desc):
     """Opus に画像を見せて可否を判定。判定不能なら False（安全側）。"""
