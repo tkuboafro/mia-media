@@ -74,7 +74,7 @@ def write_md(L, slug, meta, title, description, body_md):
           "sourceUrl": row["url"], "sourceTitle": row["title"], "sourceName": row.get("source") or "",
           "region": row.get("region") or "", "regionEn": meta.get("regionEn") or "", "category": row.get("category") or "", "akita": bool(row.get("akita")),
           "tags": ja.get("tags", []), "sources": ja.get("sources", [])}
-    if meta.get("hero"): fm["hero"] = meta["hero"]; fm["heroAlt"] = meta.get("heroAlt") or ""; fm["heroCredit"] = local_credit(L, meta.get("heroCredit") or "")
+    if meta.get("hero"): fm["hero"] = meta["hero"]; fm["heroAlt"] = (meta.get("heroAlt") or "") if L == "ja" else ((meta.get("translations") or {}).get(L, {}).get("hero_alt") or "")   # 2026-10-07: 以前は全言語に日本語のキャプションが出ていた; fm["heroCredit"] = local_credit(L, meta.get("heroCredit") or "")
     d = os.path.join(SITE, "src", "content", "articles", L); os.makedirs(d, exist_ok=True)
     path = os.path.join(d, f"{slug}.md")
     open(path, "w").write("---\n" + "\n".join(fm_line(k, v) for k, v in fm.items()) + "\n---\n\n" + render_media(body_md.strip(), L) + "\n")
@@ -91,7 +91,7 @@ def main(slug):
     import hashlib
     src = hashlib.sha1(json.dumps([ja.get("title"), ja.get("lead"), ja.get("body_md")], ensure_ascii=False).encode()).hexdigest()
     if meta.get("translations") and meta.get("translated_from") == src: tr = meta["translations"]   # 公開の再試行で翻訳をやり直さない
-    else: tr = translate(ja); meta["translations"] = tr; meta["translated_from"] = src
+    else: tr = translate(ja, hero_alt=meta.get("heroAlt") or ""); meta["translations"] = tr; meta["translated_from"] = src
     imgs = rehost_generated(slug, meta); ja, tr = meta["ja"], meta["translations"]
     json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
     paths = [write_md("ja", slug, meta, ja["title"], ja["lead"], ja["body_md"])]

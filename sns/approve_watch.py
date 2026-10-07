@@ -13,6 +13,9 @@ CH = os.environ.get("MIA_SLACK_CHANNEL", "C0C27TW71SN")
 
 # 🔴 2026-10-07 久保さん「MIA のサイトで X にポストしようとしてない？いったん不要」: 記事公開時の X 自動投稿を止める。戻すときは True
 X_POST_ENABLED = False
+# 🔴 2026-10-07 久保さん「いったん IG も Threads も消しました」: 両方のアカウントが無いので自動投稿を止める
+IG_POST_ENABLED = False
+THREADS_POST_ENABLED = False
 class _XOff(Exception):
     pass
 
@@ -119,6 +122,8 @@ def main():
                 except Exception as e:
                     post(CH, f"⚠️ X 投稿に失敗: {str(e)[:200]}", ts)
                 try:
+                    if not IG_POST_ENABLED:
+                        raise _XOff()
                     import ig_post
                     meta = json.load(open(mp)); tr = (meta.get("translations") or {}).get("en") or {}
                     img = meta.get("hero") or ""
@@ -128,13 +133,19 @@ def main():
                         mid, link = ig_post.post_image(img, cap[:2200])
                         meta["ig_post"] = link; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
                         post(CH, f"📸 Instagram に投稿しました: {link}", ts)
+                except _XOff:
+                    pass
                 except Exception as e:
                     post(CH, f"⚠️ Instagram 投稿に失敗: {str(e)[:200]}", ts)
                 try:
+                    if not THREADS_POST_ENABLED:
+                        raise _XOff()
                     import threads_post
                     meta = json.load(open(mp)); tid2, link2 = threads_post.post_article(slug, meta, "en")
                     meta["threads_post"] = link2; json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
                     post(CH, f"🧵 Threads に投稿しました: {link2}", ts)
+                except _XOff:
+                    pass
                 except Exception as e:
                     post(CH, f"⚠️ Threads 投稿に失敗: {str(e)[:200]}", ts)
             else:

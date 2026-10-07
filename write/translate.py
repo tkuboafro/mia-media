@@ -3,15 +3,16 @@
 import json, re, subprocess, sys
 LANGS = {"en": "English (British spelling)", "nl": "Dutch", "de": "German", "es": "Spanish (European)"}
 P = """Translate the approved Japanese article below into {langs}. Faithful translation: keep every fact, number and name; do not add or drop information; adapt idioms naturally for each audience. Keep the Markdown structure (## headings and paragraphs). Lines of the form [[youtube:...]], [[image:URL|caption|credit]], [[x:...]], [[instagram:...]] are media embeds: keep them on their own line, keep the URL and credit unchanged, and translate only the caption text. Romanise Japanese proper nouns with macrons omitted (e.g. Dogo, Ehime). Return ONLY JSON:
-{{"en":{{"title":"","description":"","body_md":""}},"nl":{{...}},"de":{{...}},"es":{{...}}}}
-where description = the lead sentence (max 160 chars).
+{{"en":{{"title":"","description":"","hero_alt":"","body_md":""}},"nl":{{...}},"de":{{...}},"es":{{...}}}}
+where description = the lead sentence (max 160 chars) and hero_alt = the translated HERO CAPTION (empty if none).
 
 TITLE: {title}
 LEAD: {lead}
+HERO CAPTION: {hero}
 BODY:
 {body}"""
-def translate(ja, model="opus"):
-    p = P.format(langs=", ".join(f"{k} ({v})" for k, v in LANGS.items()), title=ja["title"], lead=ja["lead"], body=ja["body_md"])
+def translate(ja, model="opus", hero_alt=""):
+    p = P.format(langs=", ".join(f"{k} ({v})" for k, v in LANGS.items()), title=ja["title"], lead=ja["lead"], hero=hero_alt or "", body=ja["body_md"])
     r = subprocess.run(["claude", "-p", p, "--output-format", "json", "--model", model, "--allowedTools", ""], capture_output=True, text=True, timeout=1200)
     try: raw = json.loads(r.stdout).get("result", "")
     except Exception: raw = r.stdout
