@@ -109,9 +109,13 @@ def create_article_page(meta):
 
 def replace_body(page_id, meta):
     """差戻し後の書き直し: 既存ブロックを消して入れ直す。"""
-    r = api("GET", f"/blocks/{page_id}/children?page_size=100")
-    for b in r["results"]:
-        if b["type"] != "callout": api("DELETE", f"/blocks/{b['id']}")
+    ids, cur = [], None
+    while True:  # 100 ブロックを超えるページもあるのでページングして全部消す
+        r = api("GET", f"/blocks/{page_id}/children?page_size=100" + (f"&start_cursor={cur}" if cur else ""))
+        ids += [b["id"] for b in r["results"] if b["type"] != "callout"]
+        if not r.get("has_more"): break
+        cur = r["next_cursor"]
+    for bid in ids: api("DELETE", f"/blocks/{bid}")
     append_blocks(page_id, ja_blocks(meta))
 
 def find_by_key(slug):
