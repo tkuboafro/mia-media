@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(__file__)); sys.path.insert(0, os.path.join(o
 import notion, stock, media as mediamod
 from article_ja import brand_terms
 HOME = os.path.expanduser("~/mia-media")
+RETRY = os.environ.get("FILL_RETRY") == "1"   # 2回目: 一般的な被写体で再挑戦（2026-10-12）
 MEDIA_LINE = re.compile(r"^\[\[(?:image|youtube|x|instagram):[^\]]*\]\]\s*$", re.M)
 
 PROMPT = """日本語ニュース記事の「画像が無い場所」に入れる画像を決めます。本文は変えません。
@@ -20,7 +21,7 @@ PROMPT = """日本語ニュース記事の「画像が無い場所」に入れ�
 
 {media}
 
-各場所について、上の「利用できるメディア」に内容が明確に合うものがあれば番号を選ぶ（同じ番号は1回だけ。"site" 種別は選ばない）。
+{retry}各場所について、上の「利用できるメディア」に内容が明確に合うものがあれば番号を選ぶ（同じ番号は1回だけ。"site" 種別は選ばない）。
 無ければ、フリー素材サイトで探す英語の検索語（一般的な2〜4語。例: "sake brewery tanks", "rice paddy autumn", "whisky glass bar"）を書く。
 実在の特定の人物・建物を探す検索語は書かない。キャプションは写したいものを具体的な日本語で（出典は書かない）。
 JSONだけを返す: {{"slots":[{{"id":"場所のID","media":番号またはnull,"query":"英語またはnull","caption":"日本語"}}]}}"""
@@ -54,7 +55,9 @@ def fill(r):
     used = set(re.findall(r"\[\[(?:image|youtube|x|instagram):([^\]|]+)", body)) | {meta.get("hero")}
     try: medias = [m for m in mediamod.collect(meta["row"], brand_terms(meta["row"])) if m["url"] not in used and m["type"] in ("image", "youtube")]
     except Exception: medias = []
-    plan = ask(PROMPT.format(title=ja["title"], lead=ja["lead"], slots="\n".join(f"- ID {k}: {d}" for k, d in slots), media=mediamod.as_prompt(medias)))
+    retry = ("【再挑戦】前回は具体的すぎる検索語で写真が見つからなかった。今回は写真サイトに必ずある一般的な被写体で考えること"
+             "（例: sake cup, sake bottle pouring, rice field Japan, rice grains, Japanese countryside, wine glass, vineyard, beer glass, whisky glass, oak barrels, snowy village Japan）。\n") if RETRY else ""
+    plan = ask(PROMPT.format(title=ja["title"], lead=ja["lead"], slots="\n".join(f"- ID {k}: {d}" for k, d in slots), media=mediamod.as_prompt(medias), retry=retry))
     got = {"hero": 0, "sec": 0, "quote": 0, "stock": 0}; heads = {f"h{i}": h for i, h in enumerate(r["h2_without_media"])}
     for s in plan.get("slots", []):
         sid = s.get("id"); cap = (s.get("caption") or "").strip(); line = None; url = cred = None
@@ -76,7 +79,7 @@ def fill(r):
             line = line or f"[[image:{url}|{cap}|{cred}]]"
             body = re.sub(r"(^## " + re.escape(heads[sid]) + r"[ \t]*\n)", lambda mm: mm.group(1) + "\n" + line + "\n", body, count=1, flags=re.M); got["sec"] += 1
     if got["hero"] or got["sec"]:
-        ja["body_md"] = body; meta.setdefault("fixes", []).append({"date": "2026-10-10", "fill_gaps": got})
+        ja["body_md"] = body; meta.setdefault("fixes", []).append({"date": time.strftime("%Y-%m-%d"), "fill_gaps": got, "retry": RETRY})
         json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
         notion.replace_body(r["page"], meta)
     left = len(r["h2_without_media"]) - got["sec"]
@@ -88,7 +91,7 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--") and not a.isdigit()]
     if args: rows = [r for r in rows if r["slug"] in args]
     if "--limit" in sys.argv: rows = rows[:int(sys.argv[sys.argv.index("--limit") + 1])]
-    done_f = os.path.join(HOME, "data", "audit", "fill_gaps_done.txt")
+    done_f = os.path.join(HOME, "data", "audit", "fill_gaps_done_retry.txt" if RETRY else "fill_gaps_done.txt")
     done = set(open(done_f).read().split()) if os.path.exists(done_f) else set()
     fails = 0
     for r in rows:

@@ -40,3 +40,10 @@
 - Unsplash 本番申請: 2026-10-07 フォーム準備完了（スクショ添付済み・常駐ブラウザ tab18）。久保さんが「Apply for production」を押す待ち（Otacon に連絡済み）。通ったら 50→1,000 回/時。
 - 公開まわりの修正（2026-10-07）: publish.py の run() が cwd 二重指定で毎回落ちていた／approve_watch が Slack 429 で落ちていた → どちらも修正、湖の誉で公開確認済み。
 - 確認待ちの下書き 約300本（Notion）。
+
+## 2026-10-10〜12 の作業記録
+- sakewire フォント G（英語 Fraunces＋Source Serif 4／日本語 Noto Sans JP）公開。OGP 既定画像も同じ書体で作り直し（2026-10-12）。
+- ストック全153件を量産（10/10, 160本）。確認待ちは約470本。
+- 画像点検ツール `write/audit_media.py`、穴埋め `write/fill_gaps.py`（引用→Opus検品フリー素材、AI生成なし、`FILL_RETRY=1` で一般的な被写体で再挑戦、Notion 手直しページはスキップ）。
+- Shopify: About ページを新セクション `mia-about` で作り直し → 下書きテーマ「Horizon v5 (about page)」191919096132（**久保さんが公開待ち**）。推測URLの404に301リダイレクト23件追加（/collections/beer→craft-beer ほか、2026-10-12）。
+- レビュー指摘の確認: Privacy の "Poricy" はショップ・ブランドサイトどちらにも無し（誤指摘）。フッターの「Locations: Shibuya · Fukuoka · Amsterdam」はショップのテーマに実在（ワイヤー由来）→ 正しいかは久保さん判断。
