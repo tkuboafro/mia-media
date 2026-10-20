@@ -55,3 +55,4 @@
 - 回答後の実装順: make_cards.py（HTML→PNG テンプレ2種）→ sw_social.py → scheduler.py＋guard.py → mia_social.py（41本を再日付）→ kpi.py。
 - 2026-10-20 追記: 投稿は Buffer 経由を提案中（X API クレジット不要・IG トークン管理不要・Buffer API の createPost で予約）。MIA の X なし → チャネルは3つ（Sake Wire の X・IG、MIA の IG）で Buffer 無料プランから試せる。
 - 2026-10-21: 久保さん回答（#cockpit「MIA｜岩田さんの役割」）「このプロジェクト俺関係ないから追いかけなくていいです」→ MIA の上申・確認は久保さんに上げない。SNS v3 の上申（B1 X クレジット／B2 IG アカウント／C2 開始日・リール／C3 承認方式／C4 今週の3本／C5 岩田さんの役割）は取り下げ。判断は MIA 側の当事者（岩田さん）と決める。久保さんがこのセッションで直接指示した場合はそれに従う。
+- 2026-10-21: 久保さん回答（C2）「A よい」→ MIA の IG は 11/2 の週に開始、リールはカルーセルで代替（実写が撮れた週から戻す）。再日付済みカレンダー: docs/mia_calendar_v3.md／data/sns/mia_calendar_v3.json（IG 30 本、11/3〜2027-01-09）。投稿の手段（Buffer か直接 API か）と @made_in_akita の接続は未決で、決まるまで投稿は始められない。
