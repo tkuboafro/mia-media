@@ -9,7 +9,7 @@
 | 項目 | 状態 |
 |---|---|
 | X @TheSakeWire | アカウントあり（2026-09-16 作成）。フォロワー 0・投稿 0。X API は「credits depleted」(402) だが、**投稿は Buffer 経由に決定（2026-10-21）したのでクレジットは買わない** |
-| IG @thesakewire | 10/7 に久保さんが「消した」とのことだが、API 上はまだ存在（MEDIA_CREATOR、投稿 0）。存続か再作成かの確認が必要 |
+| IG @thesakewire | 存在（MEDIA_CREATOR、投稿 0）。今のアカウントを残して使う（2026-10-21 決定） |
 | IG @made_in_akita | 公開中。Buffer に未接続 |
 | X（MADE IN AKITA） | 運用しない（2026-10-20 久保さん決定） |
 | Threads | 削除済み。本計画では扱わない |
@@ -51,7 +51,7 @@ Day 0 の実測を開始日に行う（v2 のときは未計測のまま止ま�
 | ブランド | チャネル | アカウント | 今の状態 | 必要なこと（誰が） |
 |---|---|---|---|---|
 | The Sake Wire | X | @TheSakeWire | 投稿 0 | Buffer に接続（久保さん） |
-| The Sake Wire | Instagram | @thesakewire | API 上は存在・投稿 0 | プロアカウントのまま Buffer に接続（削除済みなら作り直し）（久保さん） |
+| The Sake Wire | Instagram | @thesakewire | API 上は存在・投稿 0 | 今のアカウントのまま Buffer に接続（久保さん） |
 | MADE IN AKITA | Instagram | @made_in_akita | 公開中・未接続 | プロアカウント化＋ Buffer に接続（久保さん） |
 | MADE IN AKITA | X | — | 運用しない | なし（2026-10-20 久保さん決定） |
 
