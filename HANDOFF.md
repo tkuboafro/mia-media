@@ -51,5 +51,6 @@
 
 ## SNS 計画 v3（2026-10-20）
 - 本文: docs/sns_ops_v3.md ／ Claude Doc https://claude.ai/code/artifact/0a7a6d26-dad8-4611-8a54-af9ca526716e
-- 久保さんの回答待ち（Otacon が #cockpit に出した 7 問）: B1 X API クレジット購入（今は 402 credits depleted で投稿も計測も不可）／B2 IG @thesakewire 存続 or 再作成・@made_in_akita の Meta 接続／C1 MIA の X を作るか／C2 MIA 開始 11/2 週・リール→カルーセル／C3 Sake Wire は記事承認＝投稿承認／C4 金曜の「今週の3本」／C5 岩田さんの役割。
+- 久保さんの回答待ち（Otacon が #cockpit に出した 7 問）: B1 X API クレジット購入（今は 402 credits depleted で投稿も計測も不可）／B2 IG @thesakewire 存続 or 再作成・@made_in_akita の Meta 接続／C1 MIA の X → **運用しない（10/20 久保さん直接決定）**／C2 MIA 開始 11/2 週・リール→カルーセル／C3 Sake Wire は記事承認＝投稿承認／C4 金曜の「今週の3本」／C5 岩田さんの役割。
 - 回答後の実装順: make_cards.py（HTML→PNG テンプレ2種）→ sw_social.py → scheduler.py＋guard.py → mia_social.py（41本を再日付）→ kpi.py。
+- 2026-10-20 追記: 投稿は Buffer 経由を提案中（X API クレジット不要・IG トークン管理不要・Buffer API の createPost で予約）。MIA の X なし → チャネルは3つ（Sake Wire の X・IG、MIA の IG）で Buffer 無料プランから試せる。
