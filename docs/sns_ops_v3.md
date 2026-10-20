@@ -8,9 +8,9 @@
 
 | 項目 | 状態 |
 |---|---|
-| X @TheSakeWire | アカウントあり（2026-09-16 作成）。API 認証 OK。フォロワー 0・投稿 0。**X API は「credits depleted」(402) で読み書きとも不可** → クレジット購入が必要 |
+| X @TheSakeWire | アカウントあり（2026-09-16 作成）。フォロワー 0・投稿 0。X API は「credits depleted」(402) だが、**投稿は Buffer 経由に決定（2026-10-21）したのでクレジットは買わない** |
 | IG @thesakewire | 10/7 に久保さんが「消した」とのことだが、API 上はまだ存在（MEDIA_CREATOR、投稿 0）。存続か再作成かの確認が必要 |
-| IG @made_in_akita | 公開中。Meta アプリに未接続（API トークンなし） |
+| IG @made_in_akita | 公開中。Buffer に未接続 |
 | X（MADE IN AKITA） | 運用しない（2026-10-20 久保さん決定） |
 | Threads | 削除済み。本計画では扱わない |
 | 素材 | AI 生成画像・動画は使わない（10/6 決定）。実写は Shopify 商品写真 80 点（高解像度は 180ml Premier/Platinum の 13 点のみ）、蔵元写真 16 点、海外視察 20 点。動画素材はゼロ |
@@ -50,9 +50,9 @@ Day 0 の実測を開始日に行う（v2 のときは未計測のまま止ま�
 
 | ブランド | チャネル | アカウント | 今の状態 | 必要なこと（誰が） |
 |---|---|---|---|---|
-| The Sake Wire | X | @TheSakeWire | 認証 OK・クレジット 0 | X API クレジット購入（久保さん） |
-| The Sake Wire | Instagram | @thesakewire | API 上は存在・投稿 0 | 存続なら今のトークンで可。削除済みなら新規作成＋Meta 接続（久保さん） |
-| MADE IN AKITA | Instagram | @made_in_akita | 公開中・API 未接続 | プロアカウント化＋ Meta アプリに接続してトークン発行（久保さん。手順は Claude が案内） |
+| The Sake Wire | X | @TheSakeWire | 投稿 0 | Buffer に接続（久保さん） |
+| The Sake Wire | Instagram | @thesakewire | API 上は存在・投稿 0 | プロアカウントのまま Buffer に接続（削除済みなら作り直し）（久保さん） |
+| MADE IN AKITA | Instagram | @made_in_akita | 公開中・未接続 | プロアカウント化＋ Buffer に接続（久保さん） |
 | MADE IN AKITA | X | — | 運用しない | なし（2026-10-20 久保さん決定） |
 
 プロフィール共通: bio に「18+ · Drink responsibly」、IG の最低年齢 18、リンクは専用ページ（Sake Wire は sakewire.com/links、MIA は shop の /pages/links を新設し、最新投稿のリンク先を並べる）。
@@ -155,7 +155,7 @@ v3 での変更点:
 
 - コメント・DM の自動返信はしない（Phase 1〜2）。岩田さんが 24 時間以内。
 - 投稿失敗は 3 回リトライし、だめなら Slack に ⚠️ を出して翌スロットへ繰り越す。黙って落とさない。
-- IG トークン（60 日）は週 1 の更新ジョブで延長。失敗したら Slack。X の OAuth1 キーは期限なし。X のクレジット残高は毎日確認し、残り 10 投稿分を切ったら Slack。
+- 投稿は Buffer 経由（2026-10-21 決定）。IG のトークン更新・X API のクレジットは不要（Buffer 側が持つ）。Buffer の接続切れ・予約失敗は毎日確認して Slack。Buffer 無料プランは各チャネル予約 10 件までなので、予約は常に数日分だけ送る。
 
 ---
 
@@ -177,9 +177,9 @@ v3 での変更点:
 [共通]
  make_cards.py   HTML テンプレ → headless Chrome → 1080×1350 PNG → site/public/sns/ に commit → GitHub Pages で配信（IG は画像 URL が必要）
  guard.py        投稿前の機械チェック（§5-3）
- scheduler.py    15 分ごと: Notion の「承認」かつ 投稿予定日時 ≤ 今 → x_post / ig_post → 投稿 URL・投稿済み・Slack
- kpi.py          金曜 09:00: IG Insights / X metrics / Shopify UTM → Notion KPI ページ ＋ Slack 1 通
- ig_refresh      週 1 トークン更新（既存ジョブを再有効化）
+ scheduler.py    15 分ごと: Notion の「承認」で 3 日以内に投稿予定 → Buffer API createPost（dueAt 指定）→ 予約済み・Buffer の投稿 ID を記録 → 投稿後に URL を取得して 投稿済み・Slack
+ kpi.py          金曜 09:00: Buffer の投稿メトリクス / Shopify UTM / GA4 → Notion KPI ページ ＋ Slack 1 通
+ buffer_client.py  Buffer GraphQL API（BUFFER_API_KEY）。チャネル一覧・予約・投稿状態・メトリクス
 ```
 
 ### 5-2. 部品ごとの仕様
@@ -189,7 +189,7 @@ v3 での変更点:
 | `sw_social.py`（新） | 公開記事の meta（英訳済み title / description / body / hero / 出典） | X: 見出し＋ 1 文＋ URL（utm_source=x）＋タグ 2。IG: キャプション（`derive.py` の型。3 段落＋ "Link in bio" ＋タグ 8 ＋ 18+）、スライド 4〜6 枚の文言。次の空きスロット | 1 記事 1 回の Claude 呼び出し（Sonnet）。画像検品なし |
 | `make_cards.py`（新） | スライド文言、写真 URL（許諾種別付き）、ブランド | PNG 1080×1350（IG）/ 1200×675（X 添付用） | OGP 画像と同じ HTML→Chrome 方式。テンプレ 2 種（Sake Wire: 紙色・Fraunces・藍／朱、MIA: 白・Inter・黒）。写真が無い枚はタイポ面 |
 | `mia_social.py`（新） | `posts_v2.json`、Shopify 商品写真、蔵元写真 | Notion ページ 41 本（再日付）、画像 | リール行はカルーセルに変換。価格・未掲載 SKU の再チェック |
-| `scheduler.py`（新） | Notion（承認・予定日時） | 投稿、投稿 URL、ステータス更新、Slack | 二重投稿防止キー ＝ 記事キー × チャネル。X の画像は media/upload で添付 |
+| `scheduler.py`（新） | Notion（承認・予定日時） | Buffer への予約、投稿 URL、ステータス更新、Slack | 二重投稿防止キー ＝ 記事キー × チャネル。画像は公開 URL（GitHub Pages）で Buffer に渡す |
 | `guard.py`（新） | 本文・画像・リンク | 合否と理由 | 不合格は「確認待ち」に落として Slack |
 | `kpi.py`（新） | IG Insights（follower_count, reach, profile_views, 保存数）、X（自アカウントと各投稿の public_metrics）、Shopify（utm_source が instagram/x の注文・セッション） | Notion「KPI」ページ ＋ Slack | 週次。Day 30/60/90 は月次まとめも |
 | 既存流用 | `x_post.py`、`ig_post.py`、`derive.py`、`approve_watch.py`、`notion.py`、`slack_post.py`、OGP 生成 | — | 10/7 に入れた `X_POST_ENABLED` 等のフラグは scheduler 側の設定に統合 |
@@ -210,7 +210,8 @@ v3 での変更点:
 
 | 項目 | 月額の見込み |
 |---|---|
-| X API | 従量クレジット。投稿＋週次の metrics 読み取りで月 €5〜15 程度と想定（購入時に単価を確認） |
+| Buffer | 3 チャネル（Sake Wire の X・IG、MIA の IG）なので無料プランから開始。予約 10 件／チャネルの上限に当たれば Essentials（1 チャネル月 $5〜6） |
+| X API | 不要（Buffer 経由） |
 | Meta Graph API | 無料 |
 | 画像生成 | なし（AI 不使用。HTML→PNG は無料） |
 | Claude の処理 | 記事 1 本あたり小（キャプション 1 回）。MIA 41 本は作成済み |
@@ -246,8 +247,8 @@ v3 での変更点:
 
 **B（外部・お金・戻せない）**
 
-- B1 X API のクレジット購入（@TheSakeWire 用。Buffer 経由にする場合は不要）
-- B2 IG @thesakewire を残すか作り直すか。@made_in_akita をプロアカウントにして Meta アプリに接続し、トークンを発行する（手順は Claude が案内）
+- B1 X API のクレジット → **決定（2026-10-21）: 買わない。投稿は Buffer 経由**
+- B2 Buffer の準備（久保さん本人の操作）: Buffer アカウント作成、3 チャネル（X @TheSakeWire・IG @thesakewire・IG @made_in_akita）の接続、個人用 API キーの発行（publish.buffer.com/settings/api）→ `secrets.env` の BUFFER_API_KEY
 
 **C（判断）**
 
