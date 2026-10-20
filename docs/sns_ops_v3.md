@@ -53,7 +53,7 @@ Day 0 の実測を開始日に行う（v2 のときは未計測のまま止ま�
 | The Sake Wire | X | @TheSakeWire | 認証 OK・クレジット 0 | X API クレジット購入（久保さん） |
 | The Sake Wire | Instagram | @thesakewire | API 上は存在・投稿 0 | 存続なら今のトークンで可。削除済みなら新規作成＋Meta 接続（久保さん） |
 | MADE IN AKITA | Instagram | @made_in_akita | 公開中・API 未接続 | プロアカウント化＋ Meta アプリに接続してトークン発行（久保さん。手順は Claude が案内） |
-| MADE IN AKITA | X | 未確認 | — | なし（2026-10-20 久保さん決定） |
+| MADE IN AKITA | X | — | 運用しない | なし（2026-10-20 久保さん決定） |
 
 プロフィール共通: bio に「18+ · Drink responsibly」、IG の最低年齢 18、リンクは専用ページ（Sake Wire は sakewire.com/links、MIA は shop の /pages/links を新設し、最新投稿のリンク先を並べる）。
 
