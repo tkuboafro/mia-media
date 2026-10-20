@@ -48,3 +48,8 @@
 - Shopify: About ページを新セクション `mia-about` で作り直し → 下書きテーマ「Horizon v5 (about page)」191919096132（**久保さんが公開待ち**）。推測URLの404に301リダイレクト23件追加（/collections/beer→craft-beer ほか、2026-10-12）。
 - レビュー指摘の確認: Privacy の "Poricy" はショップ・ブランドサイトどちらにも無し（誤指摘）。フッターの「Locations: Shibuya · Fukuoka · Amsterdam」はショップのテーマに実在（ワイヤー由来）→ 正しいかは久保さん判断。
 - 画像の穴埋め完了（2026-10-14 09:00）: 確認待ち469本で トップ画像なし 122→77本、画像のない見出し 424→226か所 / 1,396。AI画像0・リンク切れ0。10/12 の初回は使用上限で2回とも途中停止 → 10/14 に再開して完走。
+
+## SNS 計画 v3（2026-10-20）
+- 本文: docs/sns_ops_v3.md ／ Claude Doc https://claude.ai/code/artifact/0a7a6d26-dad8-4611-8a54-af9ca526716e
+- 久保さんの回答待ち（Otacon が #cockpit に出した 7 問）: B1 X API クレジット購入（今は 402 credits depleted で投稿も計測も不可）／B2 IG @thesakewire 存続 or 再作成・@made_in_akita の Meta 接続／C1 MIA の X を作るか／C2 MIA 開始 11/2 週・リール→カルーセル／C3 Sake Wire は記事承認＝投稿承認／C4 金曜の「今週の3本」／C5 岩田さんの役割。
+- 回答後の実装順: make_cards.py（HTML→PNG テンプレ2種）→ sw_social.py → scheduler.py＋guard.py → mia_social.py（41本を再日付）→ kpi.py。
