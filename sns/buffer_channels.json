@@ -1,0 +1,9 @@
+{
+  "_note": "Buffer channels (2026-10-21 connected by Kubo). API key is BUFFER_API_KEY in secrets.env (source: Secret Manager danshikolab/buffer-api-key). GraphQL endpoint https://api.buffer.com, Bearer auth.",
+  "organization_id": "6762b190d1c005e11ce43919",
+  "channels": {
+    "sakewire_x":  {"id": "6ad7f8b7778b240e2f72624e", "service": "twitter",   "handle": "TheSakeWire"},
+    "sakewire_ig": {"id": "6ad7f7dd778b240e2f724e52", "service": "instagram", "handle": "thesakewire"},
+    "mia_ig":      {"id": "6ad7f886778b240e2f725cce", "service": "instagram", "handle": "made_in_akita"}
+  }
+}

@@ -60,3 +60,4 @@
 - 2026-10-21: C4 回答「A」→ Sake Wire に金曜「今週の3本」を入れる（週1まで）。以後の SNS 運用判断は MIA 側で決める（10/21 久保さん「MIA は追いかけなくていい」）。残る未決: 投稿手段（Buffer か直接 API か）・IG アカウントの接続・承認者（いずれも MIA 側）。
 - 2026-10-21: B1 回答「B　Buffer を使うで着地したはず」→ X API クレジットは買わず、投稿は Buffer 経由で確定。scheduler は Buffer API（createPost＋dueAt）に予約を入れる形で作る。久保さん本人の操作（Buffer アカウント・3チャネル接続・API キー）だけ Otacon 経由で1問。MIA の X は運用しない（10/20 決定）。
 - 2026-10-21: IG @thesakewire は「A 今のアカウントを残して使う」（10/7 の削除扱いは取り消し、投稿0から運用）。Buffer に接続する。久保さん本人の Buffer 準備（アカウント・3チャネル接続・API キー）は Otacon に1問で確認中。
+- 2026-10-21: Buffer 準備完了（久保さん）。API キーは Secret Manager danshikolab/buffer-api-key → secrets.env の BUFFER_API_KEY に取り込み済み。3チャネル接続を API で確認（sns/buffer_channels.json に組織・チャネル ID）。次は実装: make_cards.py → sw_social.py → buffer_client.py＋scheduler.py＋guard.py → mia_social.py（11/3 初回）→ kpi.py。新しいセッションで HANDOFF を読んでから着手するのが安い。
