@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""公開済みの記事を、ソース記事が古い順に投稿枠へ入れる（久保さん 2026-10-26「古い順に順次。API 制限に引っかからないように」）。
-枠の時刻（Europe/Amsterdam）に「Xに投稿」「Threadsに投稿」「IGに投稿」のチェックを1本ずつ入れるだけ。実際の投稿は sns_post_watch.py。
-立ち上げ1週間（〜RAMP_END）は控えめ: X・Threads 1日4本、IG 1日1本。その後 X・Threads 6本、IG 2本。
-止まっていた間の枠は埋め戻さない（一度に連投しない）。"""
+"""公開済みの記事を、ソース記事が古い順に「Xに投稿」「Threadsに投稿」「IGに投稿」へ1本ずつ入れる。実際の投稿は sns_post_watch.py。
+久保さん 2026-10-26「古い順に順次。API 制限に引っかからないように」→ 同日「はやくおわらせて」で時刻枠をやめ、各サービスの上限の手前まで詰めた間隔で回す。
+  X（Buffer 経由）    : X の上限 2,400件/日 → 5分間隔・24時間で280件まで
+  Threads（API 直接） : 250件/24時間       → 6分間隔・235件まで
+  IG（Buffer 経由）   : 100件/24時間       → 15分間隔・90件まで
+止まっていた間の分は埋め戻さない（1回の巡回で1チャネル1本まで）。"""
 import datetime as dt, json, os, sys
 from zoneinfo import ZoneInfo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import notion
 HOME = os.path.expanduser("~/mia-media"); TZ = ZoneInfo("Europe/Amsterdam")
 STATE = os.path.join(HOME, "data", "sns", "queue_state.json")
-RAMP_END = dt.date(2026, 11, 2)
-SLOTS = {"ramp": {"x": ["09:00", "12:00", "15:00", "18:00"], "threads": ["09:30", "12:30", "15:30", "18:30"], "ig": ["18:00"]},
-         "full": {"x": ["08:30", "10:30", "12:30", "14:30", "16:30", "18:30"], "threads": ["09:00", "11:00", "13:00", "15:00", "17:00", "19:00"], "ig": ["12:00", "18:00"]}}
+INTERVAL = {"x": 5, "threads": 6, "ig": 15}   # 分
+CAP24 = {"x": 280, "threads": 235, "ig": 90}
 CB = {"x": "Xに投稿", "threads": "Threadsに投稿", "ig": "IGに投稿"}
 TEXT = {"x": "X投稿文（Threads共用）", "threads": "X投稿文（Threads共用）", "ig": "IGキャプション"}
 
@@ -29,24 +30,22 @@ def src_date(page):
     except Exception: return "9999"
 
 def tick(now=None, log=print):
-    now = now or dt.datetime.now(TZ); today = now.date().isoformat()
-    plan = SLOTS["ramp" if now.date() < RAMP_END else "full"]
+    now = now or dt.datetime.now(TZ)
     st = json.load(open(STATE)) if os.path.exists(STATE) else {}
-    due = {}
-    for ch, slots in plan.items():
-        done = st.setdefault(ch, {}).setdefault(today, [])
-        past = [s for s in slots if s <= now.strftime("%H:%M") and s not in done]
-        if past: due[ch] = past
-    if not due: return
-    rows = sorted(published_rows(), key=src_date)
-    for ch, past in due.items():
-        st[ch][today] += past                     # 期限を過ぎた枠はまとめて消化扱い（連投しない）
-        nxt = next((p for p in rows if not p["properties"].get(CB[ch], {}).get("checkbox") and notion.prop_text(p, TEXT[ch]).strip()), None)
-        if not nxt: continue
-        notion.api("PATCH", f"/pages/{nxt['id']}", {"properties": {CB[ch]: {"checkbox": True}}})
-        nxt["properties"][CB[ch]] = {"checkbox": True}
-        log("queue", ch, past[-1], notion.prop_text(nxt, "記事キー"))
-    for ch in st: st[ch] = {d: v for d, v in st[ch].items() if d >= (now.date() - dt.timedelta(days=14)).isoformat()}
-    os.makedirs(os.path.dirname(STATE), exist_ok=True); json.dump(st, open(STATE, "w"), indent=1)
+    hist = st.get("sent_at", {}); due = []
+    for ch, gap in INTERVAL.items():
+        h = [t for t in hist.get(ch, []) if now - dt.datetime.fromisoformat(t) < dt.timedelta(hours=24)]; hist[ch] = h
+        if h and now - dt.datetime.fromisoformat(h[-1]) < dt.timedelta(minutes=gap) - dt.timedelta(seconds=30): continue
+        if len(h) >= CAP24[ch]: continue
+        due.append(ch)
+    if due:
+        rows = sorted(published_rows(), key=src_date)
+        for ch in due:
+            nxt = next((p for p in rows if not p["properties"].get(CB[ch], {}).get("checkbox") and notion.prop_text(p, TEXT[ch]).strip()), None)
+            if not nxt: continue
+            notion.api("PATCH", f"/pages/{nxt['id']}", {"properties": {CB[ch]: {"checkbox": True}}})
+            nxt["properties"][CB[ch]] = {"checkbox": True}; hist[ch].append(now.isoformat())
+            log("queue", ch, f"{len(hist[ch])}/24h", notion.prop_text(nxt, "記事キー"))
+    os.makedirs(os.path.dirname(STATE), exist_ok=True); json.dump({"sent_at": hist}, open(STATE, "w"), indent=1)
 
 if __name__ == "__main__": tick()

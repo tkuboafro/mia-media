@@ -40,7 +40,10 @@ def git_publish(path):
     run = lambda *a: subprocess.run(a, cwd=HOME, capture_output=True, text=True)
     run("git", "pull", "-q", "--rebase", "--autostash"); run("git", "add", path)
     run("git", "-c", "user.name=MIA Journal bot", "-c", "user.email=tkubo@danshiko.com", "commit", "-q", "-m", f"sns: card {os.path.basename(path)}")
-    return run("git", "push", "-q").returncode == 0
+    for i in range(4):   # 記事の一括公開と push がぶつかることがある
+        if run("git", "push", "-q").returncode == 0: return True
+        time.sleep(15 * (i + 1)); run("git", "pull", "-q", "--rebase", "--autostash")
+    return False
 
 def handle(page):
     pid = page["id"]; slug = notion.prop_text(page, "記事キー").strip(); acct = notion.prop_select(page, "アカウント") or ""

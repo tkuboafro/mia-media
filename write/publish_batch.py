@@ -86,6 +86,10 @@ def prepare(slug):
     json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
     paths = [publish.write_md("ja", slug, meta, ja["title"], ja["lead"], ja["body_md"])]
     for L in ("en", "nl", "de", "es"): paths.append(publish.write_md(L, slug, meta, tr[L]["title"], tr[L]["description"], tr[L]["body_md"]))
+    try:   # IG カードも同じ push で載せる（SNS 側で個別に push すると一括公開の push とぶつかる）
+        sys.path.insert(0, f"{HOME}/sns"); import make_card
+        png, _ = make_card.render(meta); paths.append(png)
+    except Exception as e: print("card skip", slug, str(e)[:100], flush=True)
     return paths + imgs, note
 
 def ship(paths, n):
@@ -107,18 +111,21 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     limit = int(a[a.index("--limit") + 1]) if "--limit" in a else None
     batch = int(a[a.index("--batch") + 1]) if "--batch" in a else 20
+    workers = int(a[a.index("--workers") + 1]) if "--workers" in a else 1   # 久保さん 2026-10-26「はやくおわらせて」→ 並列
     todo = targets()
     if limit: todo = todo[:limit]
     print(time.strftime("%m-%d %H:%M"), "to publish:", len(todo), flush=True)
     fails = 0; total = 0
     for i in range(0, len(todo), batch):
         chunk = todo[i:i + batch]; paths = []; done = []
-        for src_date, slug, pid in chunk:
-            try:
-                p, note = prepare(slug); paths += p; done.append((slug, pid, note)); fails = 0
-            except Exception as e:
-                fails += 1; print("!!", slug, str(e)[:160], flush=True)
-                if fails >= 3: break
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(workers) as ex:
+            futs = [(slug, pid, ex.submit(prepare, slug)) for src_date, slug, pid in chunk]
+            errs = 0
+            for slug, pid, f in futs:
+                try: p, note = f.result(); paths += p; done.append((slug, pid, note))
+                except Exception as e: errs += 1; print("!!", slug, str(e)[:160], flush=True)
+        fails = fails + 1 if errs >= max(3, len(chunk) // 2) else 0   # バッチの半分以上が失敗＝使用上限とみなす
         if done and ship(paths, len(done)):
             for slug, pid, note in done:
                 props = {"ステータス": {"select": {"name": "投稿済み"}}, "投稿URL": {"url": f"{publish.PUB}/ja/{slug}/"}}

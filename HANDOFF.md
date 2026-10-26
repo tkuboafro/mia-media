@@ -69,6 +69,6 @@
 - 2026-10-25: Notion から投稿できるようにした。列「Xに投稿」「IGに投稿」（チェック＝その投稿の承認）、「X状態」「IG状態」、「X投稿URL」「IG投稿URL」。launchd com.danshiko.mia-sns-post（5分毎）が sns/sns_post_watch.py でチェック済みの行を Buffer に即時投稿（shareNow）。記事は公開済み（ステータス投稿済み＋URL 200）になるまで「記事の承認待ち」で待つ。IG 画像は sns/make_card.py のカード（sakewire.com/sns/<slug>-ig.png、写真は自社・フリー素材のみ、無ければ文字カード）。ビュー「記事 → X・IG 投稿ボタン」https://app.notion.com/p/fdf23074b8164aa0978c880785f3238c?v=4043f775adf4815dba7b000cd115a6b8 。Buffer 下書きで X・IG とも送信テスト済み。
 - 2026-10-26: 久保さん決定「レビュー不要。自分で再レビューして直して公開。記事は全部公開、ソースが古い順。SNS は古い順に順次、API 制限に注意」。
   - 公開: write/publish_batch.py（Sonnet で再レビュー＋翻訳、20本ずつビルド・push、pubDate＝ソース日付、Notion を 投稿済み＋自動レビューのメモ）。一括は 10/26 15:05 開始（477本）。毎朝 07:00 に launchd com.danshiko.mia-autopublish で新着も公開。二重起動はしない。
-  - SNS: sns/sns_queue.py（見張り役 sns_post_watch.py が5分毎に呼ぶ）が公開済み記事をソースの古い順に枠へ入れる。〜11/1 は X・Threads 1日4本、IG 1日1本、11/2 から X・Threads 6本、IG 2本。X・IG は Buffer、Threads は Threads API 直（Buffer 無料枠は3チャネル）。Threads トークン更新ジョブを再有効化。
+  - SNS: sns/sns_queue.py（見張り役 sns_post_watch.py が2分毎に呼ぶ）が公開済み記事をソースの古い順に入れる。10/26 久保さん「はやくおわらせて」で時刻枠をやめ、各サービス上限の手前の間隔に変更: X 5分・280件/24h、Threads 6分・235件/24h（API 上限250）、IG 15分・90件/24h（Graph API 上限100）。IG カードは publish_batch が記事と同じ push で作る。一括公開は --workers 5 で並列。久保さんの「ブラウザ直で」案は保留（各サービスの上限はブラウザでも同じ。常駐ブラウザは X・IG 未ログイン、Threads はログイン済み）。X・IG は Buffer、Threads は Threads API 直（Buffer 無料枠は3チャネル）。Threads トークン更新ジョブを再有効化。
   - トップは新しい30本＋「すべての記事」/archive/ ページ。
   - 1本目: 10/26 15:07 X・Threads に投稿済み（メルシャン シャルドネ）。
