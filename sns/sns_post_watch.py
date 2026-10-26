@@ -8,9 +8,10 @@
 使い方: sns_post_watch.py [--dry]  （--dry は Buffer の下書きに入れるだけで投稿しない）"""
 import json, os, re, subprocess, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import notion, buffer_client as bc, make_card
+import notion, buffer_client as bc, make_card, threads_post, sns_queue
 HOME = os.path.expanduser("~/mia-media"); DRY = "--dry" in sys.argv
-COL = {"x": ("Xに投稿", "X状態", "X投稿URL", "X投稿文（Threads共用）"), "ig": ("IGに投稿", "IG状態", "IG投稿URL", "IGキャプション")}
+COL = {"x": ("Xに投稿", "X状態", "X投稿URL", "X投稿文（Threads共用）"), "threads": ("Threadsに投稿", "Threads状態", "Threads投稿URL", "X投稿文（Threads共用）"),
+       "ig": ("IGに投稿", "IG状態", "IG投稿URL", "IGキャプション")}
 
 def log(*a): print(time.strftime("%m-%d %H:%M"), *a, flush=True)
 def ok_url(u):
@@ -19,7 +20,7 @@ def ok_url(u):
 def setp(pid, **props): notion.api("PATCH", f"/pages/{pid}", {"properties": props})
 def sel(v): return {"select": {"name": v} if v else None}
 def rows():
-    f = {"or": [{"property": "Xに投稿", "checkbox": {"equals": True}}, {"property": "IGに投稿", "checkbox": {"equals": True}}]}
+    f = {"or": [{"property": c, "checkbox": {"equals": True}} for c in ("Xに投稿", "Threadsに投稿", "IGに投稿")]}
     body = {"filter": f, "page_size": 100}; out = []
     while True:
         r = notion.api("POST", f"/data_sources/{notion.DS}/query", body); out += r["results"]
@@ -30,6 +31,7 @@ def guard(ch, text):
     if not text.strip(): return "本文が空"
     if "18+" not in text: return "18+ 表記がない"
     if ch == "x" and len(re.sub(r"https?://\S+", "x" * 23, text)) > 280: return "280字を超えている"
+    if ch == "threads" and len(text) > 500: return "500字を超えている"
     if ch == "ig" and len(text) > 2200: return "2200字を超えている"
     return None
 
@@ -62,13 +64,20 @@ def handle(page):
             if not live:
                 if st != "記事の承認待ち": setp(pid, **{stc: sel("記事の承認待ち")})
                 continue
-            channel = "sakewire_x" if ch == "x" else "sakewire_ig"
+            channel = {"x": "sakewire_x", "ig": "sakewire_ig", "threads": "threads"}[ch]
         else:
-            if ch == "x": continue   # MIA は X を運用しない
+            if ch in ("x", "threads"): continue   # MIA は X・Threads を運用しない
             channel = "mia_ig" if "made_in_akita" in acct else "sakewire_ig"
         text = notion.prop_text(page, textc)
         bad = guard(ch, text)
         if bad: setp(pid, **{stc: sel("失敗")}); log("guard", ch, slug or pid, bad); continue
+        if ch == "threads":   # Threads は API で直接（Buffer の無料枠は3チャネルまで）。即時に投稿済みになる
+            if DRY: log("dry threads", slug); continue
+            body = text.replace("utm_source=x", "utm_source=threads")
+            link = re.search(r"https://sakewire\.com/\S+", body)
+            tid, permalink = threads_post.post_text(body, link=link.group(0) if link else None)
+            setp(pid, **{stc: sel("投稿済み"), urlc: {"url": permalink or None}}); log("sent threads", slug, tid)
+            continue
         images = []
         if ch == "ig":
             if is_article:
@@ -90,6 +99,9 @@ def handle(page):
         log("queued" if not DRY else "draft", ch, channel, slug or pid, p["id"])
 
 if __name__ == "__main__":
+    if not DRY:
+        try: sns_queue.tick(log=log)
+        except Exception as e: log("!! queue", str(e)[:200])
     for page in rows():
         try: handle(page)
         except Exception as e: log("!!", notion.prop_text(page, "記事キー") or page["id"], str(e)[:200])
