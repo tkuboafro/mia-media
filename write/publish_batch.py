@@ -93,9 +93,11 @@ def ship(paths, n):
     if b.returncode != 0: print(b.stdout[-1500:], b.stderr[-800:], flush=True); return False
     run("git", "pull", "-q", "--rebase", "--autostash"); run("git", "add", *paths)
     run("git", "-c", "user.name=MIA Journal bot", "-c", "user.email=tkubo@danshiko.com", "commit", "-q", "-m", f"journal: publish {n} articles")
-    for _ in range(3):
-        if run("git", "push", "-q").returncode == 0: return True
-        run("git", "pull", "-q", "--rebase", "--autostash")
+    for i in range(6):   # 他のジョブ（SNS カード・HANDOFF 更新）と push がぶつかることがあるので、間を空けて取り直す
+        p = run("git", "push", "-q")
+        if p.returncode == 0: return True
+        print("push retry", i, p.stderr.strip()[:160], flush=True)
+        time.sleep(20 * (i + 1)); run("git", "pull", "-q", "--rebase", "--autostash")
     return False
 
 if __name__ == "__main__":
