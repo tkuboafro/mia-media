@@ -130,7 +130,8 @@ if __name__ == "__main__":
             for slug, pid, note in done:
                 props = {"ステータス": {"select": {"name": "投稿済み"}}, "投稿URL": {"url": f"{publish.PUB}/ja/{slug}/"}}
                 if note: props["承認コメント"] = {"rich_text": notion.rt(("自動レビューで修正: " + note)[:1900])}
-                notion.api("PATCH", f"/pages/{pid}", {"properties": props})
+                try: notion.api("PATCH", f"/pages/{pid}", {"properties": props})
+                except Exception as e: print("!! notion status", slug, str(e)[:120], flush=True)   # 記事は公開済み。次回の実行で拾い直す
             total += len(done); print(time.strftime("%m-%d %H:%M"), f"published {total}/{len(todo)}", flush=True)
         elif done: print("!! ship failed — stop", flush=True); break
         if fails >= 3: print("ABORT: 3 consecutive failures", flush=True); break

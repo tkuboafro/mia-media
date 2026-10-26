@@ -28,10 +28,17 @@ SITE = "https://sakewire.com"
 def api(method, path, body=None):
     if not TOK: raise RuntimeError("NOTION_TOKEN missing — put it in ~/mia-media/secrets.env (integration 'MIA Journal')")
     req = urllib.request.Request("https://api.notion.com/v1" + path, data=json.dumps(body).encode() if body is not None else None, headers=H, method=method)
-    try:
-        return json.load(urllib.request.urlopen(req, timeout=60))
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"notion {method} {path}: {e.code} {e.read()[:300]}")
+    for i in range(5):   # Notion 側の 502/503/429 で一括公開が止まった（2026-10-26 18:05）→ 間を空けて取り直す
+        try:
+            return json.load(urllib.request.urlopen(req, timeout=60))
+        except urllib.error.HTTPError as e:
+            body = e.read()[:300]
+            if e.code in (429, 500, 502, 503, 504) and i < 4:
+                import time; time.sleep(float(e.headers.get("Retry-After") or 5 * (i + 1))); continue
+            raise RuntimeError(f"notion {method} {path}: {e.code} {body}")
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            if i < 4: import time; time.sleep(5 * (i + 1)); continue
+            raise
 
 def rt(text):
     """rich_text は 2000 字/要素の上限。長い段落は分ける。"""
