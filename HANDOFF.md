@@ -2,6 +2,8 @@
 
 最終更新: 2026-10-07（PL セッション）。
 
+**体制（2026-10-25〜）: このセッションは mia-media。上位は mia-mgr（~/work/Python/project/mia/HANDOFF.md）。Shopify EC は mia-ec（~/work/Python/project/mia/ec/HANDOFF.md）に移管。質問・確認は mia-mgr へ。**
+
 ## 2026-10-10 再開: 久保さんの直接指示で毎朝の記事作成（com.danshiko.mia-journal）を enable＋bootstrap。量産はまだ（指示待ち）。
 
 ## 🟡 保留中（2026-10-07 久保さん指示・Otacon 経由）→ 10/10 に記事作成は再開
@@ -65,3 +67,8 @@
 - 2026-10-25: Notion DB に列「IGキャプション」「X投稿文（Threads共用）」を追加。MIA の IG 30本を起票（ステータス 制作中・キャプション入り・画像は未作成）。記事 479本分の投稿文は `sns/sns_texts.py`（6本ずつ Sonnet、再開可）で作るが、**この Mac の claude CLI の OAuth が切れていて未実行**。同じ原因で毎朝の記事作成も 10/23 から失敗中。久保さんが `claude` → `/login` で再ログインしたら `python3 sns/sns_texts.py` を回す。
 - 2026-10-25: claude CLI 再ログイン済み（久保さん）。記事 479本すべてに「IGキャプション」「X投稿文（Threads共用）」を作成して Notion に記入（原稿 JSON の meta['sns'] にも保存）。毎朝の記事作成も復旧。IG @thesakewire のプロフィール（名前・自己紹介・リンク・カテゴリ・最低年齢18）は API で変えられないので、文面を久保さんに渡してアプリで設定してもらう。
 - 2026-10-25: Notion から投稿できるようにした。列「Xに投稿」「IGに投稿」（チェック＝その投稿の承認）、「X状態」「IG状態」、「X投稿URL」「IG投稿URL」。launchd com.danshiko.mia-sns-post（5分毎）が sns/sns_post_watch.py でチェック済みの行を Buffer に即時投稿（shareNow）。記事は公開済み（ステータス投稿済み＋URL 200）になるまで「記事の承認待ち」で待つ。IG 画像は sns/make_card.py のカード（sakewire.com/sns/<slug>-ig.png、写真は自社・フリー素材のみ、無ければ文字カード）。ビュー「記事 → X・IG 投稿ボタン」https://app.notion.com/p/fdf23074b8164aa0978c880785f3238c?v=4043f775adf4815dba7b000cd115a6b8 。Buffer 下書きで X・IG とも送信テスト済み。
+- 2026-10-26: 久保さん決定「レビュー不要。自分で再レビューして直して公開。記事は全部公開、ソースが古い順。SNS は古い順に順次、API 制限に注意」。
+  - 公開: write/publish_batch.py（Sonnet で再レビュー＋翻訳、20本ずつビルド・push、pubDate＝ソース日付、Notion を 投稿済み＋自動レビューのメモ）。一括は 10/26 15:05 開始（477本）。毎朝 07:00 に launchd com.danshiko.mia-autopublish で新着も公開。二重起動はしない。
+  - SNS: sns/sns_queue.py（見張り役 sns_post_watch.py が5分毎に呼ぶ）が公開済み記事をソースの古い順に枠へ入れる。〜11/1 は X・Threads 1日4本、IG 1日1本、11/2 から X・Threads 6本、IG 2本。X・IG は Buffer、Threads は Threads API 直（Buffer 無料枠は3チャネル）。Threads トークン更新ジョブを再有効化。
+  - トップは新しい30本＋「すべての記事」/archive/ ページ。
+  - 1本目: 10/26 15:07 X・Threads に投稿済み（メルシャン シャルドネ）。
