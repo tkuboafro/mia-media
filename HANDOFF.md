@@ -73,6 +73,8 @@
   - トップは新しい30本＋「すべての記事」/archive/ ページ。
   - 1本目: 10/26 15:07 X・Threads に投稿済み（メルシャン シャルドネ）。
 
+- 2026-10-26 22:50 久保さん「止めるな。10分に1回止まってないか確認して止まったら修正、最後まで完走」→ launchd com.danshiko.mia-publish-keepalive（StartInterval 600、publish_batch.py --batch 20 --workers 5）。単一インスタンスガードで二重起動はしない。全部公開済みになると「to publish: 0」を出すだけ。止める時は launchctl unload。Notion 502 で止まった件は sns/notion.py にリトライを入れて解消。
+
 ## 補助金・助成金 調査（2026-10-26、久保さん指示）
 - 成果物: docs/subsidies_2026-10.md ＝ Notion「補助金・助成金 調査（2026-10）MIA / The Sake Wire」 https://app.notion.com/p/4053f775adf4816db031c55c639b7426 （MADE IN AKITA プロジェクト配下、サブページ4: 国／秋田県／東京都／オランダ・EU）。
 - 要点: 申請主体は3つ（合同会社Danshiko Lab＝東京・渋谷区、Danshiko Lab B.V.＝アムステルダム、秋田の造り手11社）。日本の補助金は海外法人不可。本命は「秋田の蔵グループ＋MIA 現地パートナー」で国税庁 酒類業振興支援事業費補助金（令和9年度第1期・1月）と秋田県クラスター枠（追加募集中）。東京側は公社 展示会出展助成（ProWein 2027）、オランダ側は Digitaliseringsvoucher → WBSO → SIB（酒類除外を要確認）。
