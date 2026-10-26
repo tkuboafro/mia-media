@@ -1,0 +1,39 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import { SITE, catLabel, type Lang } from "../config";
+const { lang } = Astro.props as { lang: Lang };
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const loc = { en: "en-GB", nl: "nl-NL", de: "de-DE", es: "es-ES", ja: "ja-JP" }[lang];
+const articles = (await getCollection("articles", (a) => a.data.lang === lang)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const groups = new Map<string, typeof articles>();
+for (const a of articles) {
+  const k = a.data.pubDate.toLocaleDateString(loc, { year: "numeric", month: "long" });
+  if (!groups.has(k)) groups.set(k, []);
+  groups.get(k)!.push(a);
+}
+const t = { en: ["All stories", "Every story we have published, newest first."], nl: ["Alle verhalen", "Alles wat we publiceerden, nieuwste eerst."], de: ["Alle Beiträge", "Alle veröffentlichten Beiträge, die neuesten zuerst."], es: ["Todas las historias", "Todo lo que hemos publicado, lo más reciente primero."], ja: ["すべての記事", "これまでに公開した記事（新しい順）。"] }[lang];
+const alternates = Object.fromEntries(SITE.langs.map((l) => [l, `${base}/${l}/archive/`]));
+const day = (d: Date) => d.toLocaleDateString(loc, { day: "2-digit", month: "short" });
+---
+<Base lang={lang} title={t[0]} description={t[1]} alternates={alternates}>
+  <header class="reveal"><span class="mono">{articles.length}</span><h1 class="page-title">{t[0]}</h1><p class="page-lead">{t[1]}</p></header>
+  {[...groups.entries()].map(([month, list]) => (
+    <section class="arc">
+      <div class="sec"><h2>{month}</h2><span class="mono">{list.length}</span></div>
+      <ul class="arc__list">
+        {list.map((a) => <li><span class="mono">{day(a.data.pubDate)}</span><a href={`${base}/${lang}/${a.data.story}/`}>{a.data.title}</a>{a.data.category && <span class="mono arc__cat">{catLabel(a.data.category, lang)}</span>}</li>)}
+      </ul>
+    </section>
+  ))}
+</Base>
+<style>
+  .arc { margin-top: clamp(28px, 4vw, 48px); }
+  .arc__list { list-style: none; margin: 0; padding: 0; }
+  .arc__list li { display: grid; grid-template-columns: 80px 1fr auto; gap: 16px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .arc__list a { color: var(--ink); text-decoration: none; font-family: var(--display); font-weight: 600; font-size: 1.12rem; line-height: 1.3; }
+  .arc__list a:hover { color: var(--ai); }
+  .arc__cat { color: var(--muted); white-space: nowrap; }
+  @media (max-width: 640px) { .arc__list li { grid-template-columns: 64px 1fr; } .arc__cat { display: none; } }
+  .more-all { margin: 20px 0 0; }
+</style>

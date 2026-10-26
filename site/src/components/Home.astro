@@ -49,7 +49,7 @@ const today = fmt(new Date());
     <section>
       <div class="sec"><h2>{t.wire}</h2><a href={`${base}/${lang}/rss.xml`}>RSS →</a></div>
       <ul class="wire">
-        {rest.map((a) => (
+        {rest.slice(0, 29).map((a) => (
           <li>
             <a class="row" href={href(a)}>
               <span class="row__time"><b>{fmtDay(a.data.pubDate)}</b><span>{fmtYear(a.data.pubDate)}</span></span>
@@ -63,6 +63,7 @@ const today = fmt(new Date());
           </li>
         ))}
       </ul>
+      {rest.length > 29 && <p class="more-all"><a class="more" href={`${base}/${lang}/archive/`}>{t.all} ({articles.length}) →</a></p>}
     </section>
   )}
 
