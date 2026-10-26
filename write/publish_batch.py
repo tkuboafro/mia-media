@@ -99,6 +99,9 @@ def ship(paths, n):
     return False
 
 if __name__ == "__main__":
+    me = os.getpid()
+    others = [l for l in subprocess.run(["pgrep", "-f", "write/publish_batch.py"], capture_output=True, text=True).stdout.split() if int(l) != me]
+    if others: print("another publish_batch is running — skip"); sys.exit(0)
     a = sys.argv[1:]
     limit = int(a[a.index("--limit") + 1]) if "--limit" in a else None
     batch = int(a[a.index("--batch") + 1]) if "--batch" in a else 20
