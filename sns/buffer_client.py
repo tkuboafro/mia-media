@@ -10,7 +10,9 @@ def _key():
         if l.startswith("BUFFER_API_KEY="): return l.split("=", 1)[1].strip()
     raise RuntimeError("BUFFER_API_KEY がない")
 
-class RateLimited(Exception): pass
+class RateLimited(Exception):
+    """Buffer 無料プランは API 250 リクエスト/24h（2026-10-27 実測: ratelimit-policy "250-in-1day"）。"""
+    def __init__(self, retry_after=900): super().__init__(f"Buffer 429, retry after {retry_after}s"); self.retry_after = retry_after
 
 def gql(q, v=None):
     req = urllib.request.Request("https://api.buffer.com", data=json.dumps({"query": q, "variables": v or {}}).encode(),
@@ -18,7 +20,7 @@ def gql(q, v=None):
     try:
         with urllib.request.urlopen(req, timeout=60) as r: d = json.load(r)
     except urllib.error.HTTPError as e:
-        if e.code == 429: raise RateLimited("Buffer 429")   # 100 req / 15 min。呼び出し側はその巡回を打ち切る
+        if e.code == 429: raise RateLimited(int(e.headers.get("Retry-After") or 900))   # 呼び出し側は巡回を打ち切り、解除時刻まで Buffer を呼ばない
         raise
     if d.get("errors"): raise RuntimeError("Buffer: " + json.dumps(d["errors"], ensure_ascii=False)[:300])
     return d["data"]

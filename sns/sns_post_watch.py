@@ -45,7 +45,15 @@ def git_publish(path):
         time.sleep(15 * (i + 1)); run("git", "pull", "-q", "--rebase", "--autostash")
     return False
 
-SENT = {}
+SENT = {}; POLLS = {"n": 0}
+RETRY = f"{HOME}/data/sns/buffer_retry_at"
+def buffer_blocked():
+    try: return os.path.exists(RETRY) and time.time() < float(open(RETRY).read().strip() or 0)
+    except Exception: return False
+def _age(page):
+    import datetime as _dt
+    try: return time.time() - _dt.datetime.strptime(page.get("last_edited_time", ""), "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=_dt.timezone.utc).timestamp()
+    except Exception: return 1e9
 
 def handle(page):
     pid = page["id"]; slug = notion.prop_text(page, "記事キー").strip(); acct = notion.prop_select(page, "アカウント") or ""
@@ -54,14 +62,18 @@ def handle(page):
     for ch, (cb, stc, urlc, textc) in COL.items():
         if not page["properties"].get(cb, {}).get("checkbox"): continue
         if os.path.exists(f"{HOME}/data/sns/pause_{ch}"): continue   # 一時停止（X は Buffer 再接続待ち 2026-10-27）
+        if ch in ("x", "ig") and buffer_blocked(): continue   # Buffer 250 req/24h の解除待ち
         st = notion.prop_select(page, stc)
         if st in ("投稿済み", "失敗"): continue
         if st == "予約済み":   # Buffer の結果を見に行く
             m = re.search(rf"{ch}:(\w+)", buf)
             if not m: continue
+            if _age(page) < 300 or POLLS["n"] >= 3: continue   # 送信直後は見ない。確認は1巡回3件まで（Buffer 250 req/24h）
+            POLLS["n"] += 1
             p = bc.get_post(m.group(1))
             if p["status"] == "sent": setp(pid, **{stc: sel("投稿済み"), urlc: {"url": p.get("externalLink") or None}}); log("sent", ch, slug or pid)
             elif p["status"] == "error": setp(pid, **{stc: sel("失敗")}); log("error", ch, slug or pid, (p.get("error") or {}).get("message"))
+            else: setp(pid, **{"Buffer ID": {"rich_text": notion.rt(buf)}})   # 更新時刻を進めて、次の確認は5分後以降
             continue
         # まだ送っていない
         if is_article:
@@ -111,5 +123,6 @@ if __name__ == "__main__":
         except Exception as e: log("!! queue", str(e)[:200])
     for page in rows():
         try: handle(page)
-        except bc.RateLimited: log("Buffer 429 — この巡回は打ち切り"); break
+        except bc.RateLimited as e:
+            open(RETRY, "w").write(str(time.time() + e.retry_after)); log(f"Buffer 429 — {e.retry_after}s 後まで Buffer を呼ばない"); break
         except Exception as e: log("!!", notion.prop_text(page, "記事キー") or page["id"], str(e)[:200])

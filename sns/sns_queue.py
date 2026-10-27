@@ -11,8 +11,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import notion
 HOME = os.path.expanduser("~/mia-media"); TZ = ZoneInfo("Europe/Amsterdam")
 STATE = os.path.join(HOME, "data", "sns", "queue_state.json")
-INTERVAL = {"x": 20, "threads": 6, "ig": 15}   # 分。X は 2026-10-26 に51本目で 403（自動投稿扱い）→ 再開後は 20分間隔・48本/日に抑える
-CAP24 = {"x": 48, "threads": 235, "ig": 90}
+# Buffer 無料プランは API 250 リクエスト/24h。1投稿 = 作成1回＋確認1回なので X+IG で 100本/日が上限。
+# X は 2026-10-26 に51本目で 403（自動投稿扱い）→ 再開後は 30分間隔・40本/日。IG は 24分間隔・60本/日。
+INTERVAL = {"x": 30, "threads": 6, "ig": 24}   # 分
+CAP24 = {"x": 40, "threads": 235, "ig": 60}
+RETRY = os.path.join(HOME, "data", "sns", "buffer_retry_at")   # 429 を受けた時に見張りが書く「この時刻まで Buffer を呼ばない」
+def buffer_blocked():
+    try: return os.path.exists(RETRY) and dt.datetime.now().timestamp() < float(open(RETRY).read().strip() or 0)
+    except Exception: return False
 CB = {"x": "Xに投稿", "threads": "Threadsに投稿", "ig": "IGに投稿"}
 TEXT = {"x": "X投稿文（Threads共用）", "threads": "X投稿文（Threads共用）", "ig": "IGキャプション"}
 
@@ -35,6 +41,7 @@ def tick(now=None, log=print):
     hist = st.get("sent_at", {}); due = []
     for ch, gap in INTERVAL.items():
         if os.path.exists(os.path.join(HOME, "data", "sns", f"pause_{ch}")): continue   # 久保さんが再接続するまで止める等
+        if ch in ("x", "ig") and buffer_blocked(): continue   # Buffer の日次上限待ち
         h = [t for t in hist.get(ch, []) if now - dt.datetime.fromisoformat(t) < dt.timedelta(hours=24)]; hist[ch] = h
         if h and now - dt.datetime.fromisoformat(h[-1]) < dt.timedelta(minutes=gap) - dt.timedelta(seconds=30): continue
         if len(h) >= CAP24[ch]: continue
