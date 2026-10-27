@@ -75,6 +75,8 @@
 
 - 2026-10-26 22:50 久保さん「止めるな。10分に1回止まってないか確認して止まったら修正、最後まで完走」→ launchd com.danshiko.mia-publish-keepalive（StartInterval 600、publish_batch.py --batch 20 --workers 5）。単一インスタンスガードで二重起動はしない。全部公開済みになると「to publish: 0」を出すだけ。止める時は launchctl unload。Notion 502 で止まった件は sns/notion.py にリトライを入れて解消。
 
+- 2026-10-27 09:40 SNS 障害2件。(1) X: 10/26 22:15 に51本目で X が 403「permissions error、Buffer で X を再接続」→ 以降全滅。X は pause_x で停止、失敗38本＋未送信73本のチェックを外し、再開後は 30分間隔・40本/日。**久保さんに Buffer で X チャンネルの再接続と x.com の制限確認を依頼中**。再開は `rm data/sns/pause_x`。(2) Buffer 無料プランの API 上限は **250 リクエスト/24h**（ratelimit-policy "250-in-1day"、100/15min ではない）。失敗行の再送ループで使い切り、IG も止まった。対策: 429 の Retry-After を data/sns/buffer_retry_at に書いてその時刻まで Buffer を呼ばない、予約済みの確認は送信5分後に1回（1巡回3件まで）、送信は1巡回1チャネル3件まで、IG 24分間隔・60本/日。本日 14:58 CET に解除。1投稿≒2リクエストなので無料プランでは X+IG 合計 100本/日が上限。
+
 ## 補助金・助成金 調査（2026-10-26、久保さん指示）
 - 成果物: docs/subsidies_2026-10.md ＝ Notion「補助金・助成金 調査（2026-10）MIA / The Sake Wire」 https://app.notion.com/p/4053f775adf4816db031c55c639b7426 （MADE IN AKITA プロジェクト配下、サブページ4: 国／秋田県／東京都／オランダ・EU）。
 - 要点: 申請主体は3つ（合同会社Danshiko Lab＝東京・渋谷区、Danshiko Lab B.V.＝アムステルダム、秋田の造り手11社）。日本の補助金は海外法人不可。本命は「秋田の蔵グループ＋MIA 現地パートナー」で国税庁 酒類業振興支援事業費補助金（令和9年度第1期・1月）と秋田県クラスター枠（追加募集中）。東京側は公社 展示会出展助成（ProWein 2027）、オランダ側は Digitaliseringsvoucher → WBSO → SIB（酒類除外を要確認）。
