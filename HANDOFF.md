@@ -77,6 +77,8 @@
 
 - 2026-10-27 09:40 SNS 障害2件。(1) X: 10/26 22:15 に51本目で X が 403「permissions error、Buffer で X を再接続」→ 以降全滅。X は pause_x で停止、失敗38本＋未送信73本のチェックを外し、再開後は 30分間隔・40本/日。**久保さんに Buffer で X チャンネルの再接続と x.com の制限確認を依頼中**。再開は `rm data/sns/pause_x`。(2) Buffer 無料プランの API 上限は **250 リクエスト/24h**（ratelimit-policy "250-in-1day"、100/15min ではない）。失敗行の再送ループで使い切り、IG も止まった。対策: 429 の Retry-After を data/sns/buffer_retry_at に書いてその時刻まで Buffer を呼ばない、予約済みの確認は送信5分後に1回（1巡回3件まで）、送信は1巡回1チャネル3件まで、IG 24分間隔・60本/日。本日 14:58 CET に解除。1投稿≒2リクエストなので無料プランでは X+IG 合計 100本/日が上限。
 
+- 2026-10-27 09:39–09:52 **Threads 二重投稿 44件**。原因: 私が手動で sns_post_watch.py を走らせ、launchd（2分毎）の実行と同時に溜まっていた未送信行を処理した。対策済み: 見張りに単一インスタンスガード（pgrep）、Threads は1巡回1件まで。**見張りを手で走らせない**（走らせるなら launchctl unload してから）。重複の2本目以降の permalink 一覧: data/sns/threads_duplicates_20261027.txt（44行）、詳細 JSON 同名 .json。Threads API での削除は現在のトークンに threads_delete 権限がなく 403 → 久保さんに「threads_delete 付きトークン再発行」か「手動削除」を依頼中。Notion の Threads投稿URL は残す側（先に出た方）に直し済み。
+
 ## 補助金・助成金 調査（2026-10-26、久保さん指示）
 - 成果物: docs/subsidies_2026-10.md ＝ Notion「補助金・助成金 調査（2026-10）MIA / The Sake Wire」 https://app.notion.com/p/4053f775adf4816db031c55c639b7426 （MADE IN AKITA プロジェクト配下、サブページ4: 国／秋田県／東京都／オランダ・EU）。
 - 要点: 申請主体は3つ（合同会社Danshiko Lab＝東京・渋谷区、Danshiko Lab B.V.＝アムステルダム、秋田の造り手11社）。日本の補助金は海外法人不可。本命は「秋田の蔵グループ＋MIA 現地パートナー」で国税庁 酒類業振興支援事業費補助金（令和9年度第1期・1月）と秋田県クラスター枠（追加募集中）。東京側は公社 展示会出展助成（ProWein 2027）、オランダ側は Digitaliseringsvoucher → WBSO → SIB（酒類除外を要確認）。
