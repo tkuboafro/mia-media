@@ -10,10 +10,16 @@ def _key():
         if l.startswith("BUFFER_API_KEY="): return l.split("=", 1)[1].strip()
     raise RuntimeError("BUFFER_API_KEY がない")
 
+class RateLimited(Exception): pass
+
 def gql(q, v=None):
     req = urllib.request.Request("https://api.buffer.com", data=json.dumps({"query": q, "variables": v or {}}).encode(),
                                  headers={"Authorization": f"Bearer {_key()}", "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r: d = json.load(r)
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r: d = json.load(r)
+    except urllib.error.HTTPError as e:
+        if e.code == 429: raise RateLimited("Buffer 429")   # 100 req / 15 min。呼び出し側はその巡回を打ち切る
+        raise
     if d.get("errors"): raise RuntimeError("Buffer: " + json.dumps(d["errors"], ensure_ascii=False)[:300])
     return d["data"]
 

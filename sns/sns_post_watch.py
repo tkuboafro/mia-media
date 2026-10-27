@@ -45,12 +45,15 @@ def git_publish(path):
         time.sleep(15 * (i + 1)); run("git", "pull", "-q", "--rebase", "--autostash")
     return False
 
+SENT = {}
+
 def handle(page):
     pid = page["id"]; slug = notion.prop_text(page, "記事キー").strip(); acct = notion.prop_select(page, "アカウント") or ""
     is_article = notion.prop_select(page, "チャネル") == "Journal"
     buf = notion.prop_text(page, "Buffer ID")
     for ch, (cb, stc, urlc, textc) in COL.items():
         if not page["properties"].get(cb, {}).get("checkbox"): continue
+        if os.path.exists(f"{HOME}/data/sns/pause_{ch}"): continue   # 一時停止（X は Buffer 再接続待ち 2026-10-27）
         st = notion.prop_select(page, stc)
         if st in ("投稿済み", "失敗"): continue
         if st == "予約済み":   # Buffer の結果を見に行く
@@ -96,7 +99,8 @@ def handle(page):
                 if not images:
                     if st != "画像なし": setp(pid, **{stc: sel("画像なし")})
                     continue
-        p = bc.create_post(channel, text, images=images, draft=DRY)
+        if SENT.get(ch, 0) >= 3: continue   # 1巡回 1チャネル 3件まで（Buffer 100 req/15 min 対策）
+        p = bc.create_post(channel, text, images=images, draft=DRY); SENT[ch] = SENT.get(ch, 0) + 1
         buf = (buf + f" {ch}:{p['id']}").strip()
         setp(pid, **{stc: sel("予約済み") if not DRY else None, "Buffer ID": {"rich_text": notion.rt(buf)}})
         log("queued" if not DRY else "draft", ch, channel, slug or pid, p["id"])
@@ -107,4 +111,5 @@ if __name__ == "__main__":
         except Exception as e: log("!! queue", str(e)[:200])
     for page in rows():
         try: handle(page)
+        except bc.RateLimited: log("Buffer 429 — この巡回は打ち切り"); break
         except Exception as e: log("!!", notion.prop_text(page, "記事キー") or page["id"], str(e)[:200])
