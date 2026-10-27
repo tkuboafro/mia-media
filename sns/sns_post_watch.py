@@ -120,6 +120,9 @@ def handle(page):
         log("queued" if not DRY else "draft", ch, channel, slug or pid, p["id"])
 
 if __name__ == "__main__":
+    _me = os.getpid()
+    if [l for l in subprocess.run(["pgrep", "-f", "sns/sns_post_watch.py"], capture_output=True, text=True).stdout.split() if int(l) != _me]:
+        sys.exit(0)   # 同時に2本走ると同じ行を二重投稿する（2026-10-27 09:52 Threads で発生）
     if not DRY:
         try: sns_queue.tick(log=log)
         except Exception as e: log("!! queue", str(e)[:200])
