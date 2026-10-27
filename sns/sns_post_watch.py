@@ -91,6 +91,8 @@ def handle(page):
         if bad: setp(pid, **{stc: sel("失敗")}); log("guard", ch, slug or pid, bad); continue
         if ch == "threads":   # Threads は API で直接（Buffer の無料枠は3チャネルまで）。即時に投稿済みになる
             if DRY: log("dry threads", slug); continue
+            if SENT.get(ch, 0) >= 1: continue   # 溜まった分を一度に出さない（1巡回1件、巡回は2分毎）
+            SENT[ch] = SENT.get(ch, 0) + 1
             body = text.replace("utm_source=x", "utm_source=threads")
             link = re.search(r"https://sakewire\.com/\S+", body)
             tid, permalink = threads_post.post_text(body, link=link.group(0) if link else None)
