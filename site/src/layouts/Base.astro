@@ -34,6 +34,22 @@ const foot = {
     <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href={canonical} />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "NewsMediaOrganization", "@id": "https://sakewire.com/#media", "name": "The Sake Wire", "url": "https://sakewire.com/",
+          "description": "Daily news about Japanese sake, shochu, whisky, wine and craft beer for readers in Europe.",
+          "publisher": { "@id": "https://sakewire.com/#danshiko" },
+          "sameAs": ["https://www.instagram.com/thesakewire/", "https://x.com/TheSakeWire", "https://www.threads.com/@thesakewire"] },
+        { "@type": "Organization", "@id": "https://sakewire.com/#danshiko", "name": "Danshiko Lab", "url": "https://danshiko.com",
+          "brand": { "@type": "Brand", "name": "MADE IN AKITA", "url": "https://made-in-akita.com" },
+          "description": "Amsterdam-based importer and trade desk for sake, wine, craft beer and gin from 11 producers in Akita Prefecture, Japan, supplying restaurants, retailers and distributors across the EU.",
+          "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+          "areaServed": "EU",
+          "contactPoint": { "@type": "ContactPoint", "contactType": "sales", "email": "trade@danshiko.com", "availableLanguage": ["en", "ja", "nl"] },
+          "sameAs": ["https://made-in-akita.com", "https://shop.made-in-akita.com", "https://www.instagram.com/made_in_akita/"] }
+      ]
+    })} />
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href, Astro.site)} />)}
     <meta property="og:type" content={type} />
     <meta property="og:url" content={canonical} />
