@@ -4,7 +4,7 @@
 出力: site/public/sns/<slug>-ig.png（GitHub Pages で https://sakewire.com/sns/<slug>-ig.png として公開）。"""
 import html, json, os, re, subprocess, sys
 HOME = os.path.expanduser("~/mia-media"); OUT = os.path.join(HOME, "site", "public", "sns")
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CHROME = next((c for c in (os.environ.get("MIA_CHROME", ""), "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/opt/pw-browsers/chromium") if c and os.path.exists(c)), "chromium")   # Mac → クラウド（Playwright 同梱の chromium）
 CAT = {"受賞": "Awards", "蔵元": "Breweries", "輸出": "Export", "新商品": "New releases", "研究": "Research", "行政": "Policy", "イベント": "Events"}
 
 def usable_photo(meta):
@@ -41,7 +41,7 @@ h1{{font:600 {size}px/1.06 'Fraunces',serif;letter-spacing:-.015em;margin:{'26px
 <div style="text-align:right">{html.escape(credit) + '<br>' if credit else ''}sakewire.com · 18+</div></div></div></div></body></html>"""
     os.makedirs(OUT, exist_ok=True); src = os.path.join(OUT, f".{slug}.html"); png = os.path.join(OUT, f"{slug}-ig.png")
     open(src, "w").write(doc)
-    subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--virtual-time-budget=15000",
+    subprocess.run([CHROME, "--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--virtual-time-budget=15000",
                     "--window-size=1080,1350", f"--screenshot={png}", "file://" + src], capture_output=True, timeout=120)
     os.remove(src)
     if not os.path.exists(png): raise RuntimeError("card render failed")
