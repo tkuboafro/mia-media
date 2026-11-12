@@ -18,7 +18,14 @@
 2. 確認待ちの下書き 約300本のレビュー。
 久保さんへの確認は必ず Otacon 経由（~/work/Python/CLAUDE.md「指示系統」）。
 
-## 現在の運用
+## 2026-11-12〜 クラウド運用（Sub 停止後）
+- 毎日の記事作成は `cloud/daily.py`（説明は先頭）。毎朝 06:37 JST に claude.ai の定期実行（The Sake Wire 日次記事作成・trig_0192ivpQdWEDSdBqEqCVhpCJ）が新しいクラウドセッションで実行する。上の run_daily.sh・launchd の記述は Sub 時代のもの
+- ニュースは Grok の自動実行「酒News」（毎朝 05:00 JST）が Drive「MIA-NEWS（Grok 自動収集）」に MIA-NEWS_YYYYMMDD.json を置く
+- data/ は持ち越さない。使用済み判定は公開済み md（sourceUrl・sources・sourceTitle）から毎回作る＋Sonnet で同じ出来事を外す
+- SNS 投稿は claude-workspace の infra/otacon_hub/mia_sns.py（Cloud Run の Otacon ハブ）。Notion で ステータス=投稿済み かつ投稿文がある行を古い順に出す
+- カード画像は chromium（/opt/pw-browsers/chromium）で描く
+
+## 現在の運用（Sub 時代）
 - 記事: 毎朝 05:30 `run_daily.sh` が1本書く（10/7〜10/9 停止、10/10 再開） → Notion「確認待ち」＋ Slack レビュー依頼。量産（`batch_past.sh`）は久保さんの指示があるときだけ（`MIA_DEADLINE` で締切指定可）。
 - 公開: `sns/approve_watch.py`（launchd 15分毎）が Notion「承認」を拾い `publish.py` で翻訳→ビルド→push。
   - Slack スレッド巡回は1回40本まで（429 対策, 2026-10-07）。
