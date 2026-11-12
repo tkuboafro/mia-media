@@ -44,7 +44,16 @@ def sm(name, env):
     return r.stdout.strip()
 
 
+def ensure_pkgs():
+    """環境によって requests が入っていない（2026-11-12 定期実行の新セッションで発生）→ 足してから進む"""
+    try:
+        import requests  # noqa: F401
+    except ImportError:
+        subprocess.run([sys.executable, "-m", "pip", "install", "-q", "requests"], check=True)
+
+
 def setup():
+    ensure_pkgs()
     if os.path.realpath(HOME) != REPO:   # スクリプト群は ~/mia-media を前提にしている
         if os.path.islink(HOME) or not os.path.exists(HOME):
             if os.path.islink(HOME): os.unlink(HOME)
