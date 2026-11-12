@@ -19,7 +19,7 @@
 久保さんへの確認は必ず Otacon 経由（~/work/Python/CLAUDE.md「指示系統」）。
 
 ## 2026-11-12〜 クラウド運用（Sub 停止後）
-- 毎日の記事作成は `cloud/daily.py`（説明は先頭）。毎朝 06:37 JST に claude.ai の定期実行（The Sake Wire 日次記事作成・trig_0192ivpQdWEDSdBqEqCVhpCJ）が新しいクラウドセッションで実行する。上の run_daily.sh・launchd の記述は Sub 時代のもの
+- 毎日の記事作成は `cloud/daily.py`（説明は先頭）。毎朝 06:37 JST に claude.ai の定期実行（The Sake Wire 日次記事作成・trig_01FKqQhFgtnF87j8kWDVpzko）が MIA-mgr のクラウドセッション（session_01WJxMgpND9B1BqEaX9JWYsT）に届き、そこで実行する。新しいセッションや別セッションに飛ばす方式は、リポジトリへの push 権限が付かず失敗した（11/12 確認）。上の run_daily.sh・launchd の記述は Sub 時代のもの
 - ニュースは Grok の自動実行「酒News」（毎朝 05:00 JST）が Drive「MIA-NEWS（Grok 自動収集）」に MIA-NEWS_YYYYMMDD.json を置く
 - data/ は持ち越さない。使用済み判定は公開済み md（sourceUrl・sources・sourceTitle）から毎回作る＋Sonnet で同じ出来事を外す
 - SNS 投稿は claude-workspace の infra/otacon_hub/mia_sns.py（Cloud Run の Otacon ハブ）。Notion で ステータス=投稿済み かつ投稿文がある行を古い順に出す
