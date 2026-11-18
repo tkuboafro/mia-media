@@ -9,7 +9,7 @@
 ### 毎朝の記事作成（06:37 JST）
 - `python3 cloud/daily.py`（手順は先頭の説明）: Drive「MIA-NEWS（Grok 自動収集）」1E9_QnNhULd9KkEfMqxlEwQPxzhZ9Gvuk の MIA-NEWS_YYYYMMDD.json → 公開済み md で使用済み判定 → Sonnet で重複判定 → 最大 3 本を Opus で執筆 → Notion → publish_batch（再レビュー・4 言語翻訳・ビルド・push）→ sns_texts
 - 実行の仕方: `python3 cloud/daily.py > <scratchpad>/daily_<日付>.log 2>&1` をバックグラウンドで → 公開 slug ごとに https://sakewire.com/en/<slug>/ が 200 か確認 → 成功なら返答は「完了」の 1 語だけ。失敗時は直せるもの（コード不具合）は直して push・再実行（公開済みかを先に確認し二重公開しない）、直せないもの（ログイン切れ・権限・外部停止）はここに 1 行＋MIA-mgr に send_message
-- 定期実行は **このセッションに届く** 形にする（別セッションや毎回新規セッションに飛ばす方式は push 権限が付かず失敗した・11/12）。11/18 までは MIA-mgr のセッションで受けていた（trig_01FKqQhFgtnF87j8kWDVpzko）
+- 定期実行は **このセッションに届く** 形にする（別セッションや毎回新規セッションに飛ばす方式は push 権限が付かず失敗した・11/12）。11/19〜 このセッション（session_01WJxMgopjZ6UU3rzyqzaB2E）宛の trig_01Gd1qoD5CNddjjSM8tKkb62。11/18 までは MIA-mgr のセッションで受けていた（旧 trig_01FKqQhFgtnF87j8kWDVpzko・削除済み）
 - ニュースは Grok の自動実行「酒News」（毎朝 05:00・久保さんの Grok アカウント）。Drive に JSON が無い日は「候補なし」で正常終了
 - シークレット（名前だけ）: 環境変数 GCP_SM_SA_KEY_JSON、SM の mia-notion-token・unsplash-access-key・pexels-api-key・GDRIVE_READONLY_TOKEN_JSON。gcloud は `env -u CLOUDSDK_AUTH_ACCESS_TOKEN`
 
@@ -26,6 +26,7 @@
 - 下の「Sub 時代」の launchd・secrets.env・run_daily.sh の記述は歴史。クラウドでは使わない
 
 ## 作業記録（クラウド）
+- 2026-11-19 毎朝 06:37 JST の定期実行をこのセッション宛に作り直し（trig_01Gd1qoD5CNddjjSM8tKkb62）、MIA-mgr 宛の旧 trig_01FKqQhFgtnF87j8kWDVpzko を削除。~/mia-media → /home/user/mia-media のリンク作成
 - 2026-11-19 専用セッションとして独立（MIA-mgr から引き継ぎ）
 - 2026-11-12〜18 MIA-mgr のセッションで毎朝 cloud/daily.py を実行（毎日 0〜3 本公開）
 - 2026-11-11 AI 検索対策: sakewire.com を GSC 登録・sitemap 送信、IndexNow で 2,427 URL、蔵元ページに受賞歴（出典つき）と Organization＋award の JSON-LD、llms.txt に受賞要約（e65b1ba）
