@@ -18,6 +18,18 @@ def _who(credit):
     return "Photo: " + re.sub(r"<[^>]+>", "", credit.split(":", 1)[-1]).strip().replace("（", " (").replace("）", ")")
 
 
+def from_pool(kind):
+    """sns/photo_pool.json の kind から、どの記事・カードにも使われていない最初の 1 枚。"""
+    import json
+    try: pool = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "photo_pool.json")))
+    except FileNotFoundError: return None
+    used = photos.used()
+    for c in pool.get(kind, []):
+        if photos.pid(c["url"]) not in used:
+            photos.stock.track(c); return c
+    return None
+
+
 def choose(meta, hero_idx=None, dry=False):
     """戻り値 (写真 URL, 'Photo: 撮影者 (提供元)')。"""
     slug = meta["slug"]; led = photos.ledger()
@@ -35,7 +47,8 @@ def choose(meta, hero_idx=None, dry=False):
     k = photos.kind(tr.get("title") or "", text)[0]
     desc = f"{k} — story: {tr.get('title') or ''}"
     if dry: return None, f"(dry) queries={qs[:4]}"
-    p = photos.pick_unique(qs, desc, max_vet=8, generic=True)
+    p = from_pool(k)   # 検品済みの在庫（build_photo_pool.py）から未使用の 1 枚。無ければその場で探す
+    if not p: p = photos.pick_unique(qs, desc, max_vet=8, generic=True)
     if not p: raise NoPhoto(f"{slug}: 使える写真が見つからない")
     credit = _who(p["credit"])
     led = photos.ledger(); led[slug] = {"url": p["url"], "credit": credit, "page": p.get("page")}; photos.save_ledger(led)
