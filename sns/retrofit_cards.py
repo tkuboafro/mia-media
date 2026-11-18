@@ -77,7 +77,10 @@ def main():
         if psel(p, "IG状態") in ("投稿済み", "予約済み") or not ptext(p, "IGキャプション").strip(): continue
         if not os.path.exists(os.path.join(photos.ARTS, "en", slug + ".md")): continue
         todo.append((dates.get(slug) or fm(slug)["pubDate"] or "9999", slug))
-    todo.sort()
+    # mia_sns と同じ順（サイト公開 3 日以内は新しい順で先、残りはソースの古い順）。新着のカードから先に直す
+    import datetime as dt
+    recent = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+    todo.sort(key=lambda x: (0, -int(x[1][:10].replace("-", "")), x[1]) if re.match(r"\d{4}-\d{2}-\d{2}", x[1]) and x[1][:10] >= recent else (1, x[0], x[1]))
     idx = photos.hero_index(); led = photos.ledger()
     need = []
     for _, slug in todo:
