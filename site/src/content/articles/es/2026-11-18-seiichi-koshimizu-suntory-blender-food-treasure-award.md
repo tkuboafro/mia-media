@@ -13,6 +13,9 @@ category: "受賞"
 akita: false
 tags: ["Japanese whisky", "Suntory", "Blender", "Award", "Agency for Cultural Affairs", "Hibiki"]
 sources: [{"name": "サントリーホールディングス", "title": "輿水 精一(こしみず せいいち)サントリー名誉チーフブレンダーが令和8年度（第1回）文化庁「食の至宝」を受賞", "url": "https://www.suntory.co.jp/news/article/2026/15170.html"}]
+hero: "https://images.pexels.com/photos/12431191/pexels-photo-12431191.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+heroAlt: "Copas de cata con whisky de color ámbar, que evocan el trabajo de un blender"
+heroCredit: "Foto: Cristian Mihaila (Pexels)"
 ---
 
 Suntory Holdings ha anunciado que su maestro blender honorario, Seiichi Koshimizu, ha recibido el «Tesoro Culinario» (Shoku no Shiho) de la Agencia de Asuntos Culturales de Japón correspondiente al año fiscal 2026 (Reiwa 8). En esta primera edición del galardón, Koshimizu fue reconocido por su participación en la elaboración de los single malts Yamazaki y Hakushu y del whisky blended Hibiki. Así, uno de los artífices que participaron en el proceso por el que el whisky japonés se dio a conocer en todo el mundo ha sido reconocido en el ámbito de la política cultural del Estado.

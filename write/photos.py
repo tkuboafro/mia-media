@@ -52,6 +52,9 @@ def used(extra=()):
         for u in re.findall(r'^hero:\s*"?([^"\n]+)"?\s*$', t, re.M) + re.findall(r'<img src="([^"]+)"', t) + re.findall(r"\[\[image:([^|\]]+)", t):
             s.add(pid(u))
     for v in ledger().values(): s.add(pid(v.get("url")))
+    for f in glob.glob(os.path.join(REPO, "data", "article_*.json")):   # 同じ実行で書いた未公開の原稿どうしも重複させない
+        try: s.add(pid(json.load(open(f)).get("hero") or ""))
+        except Exception: pass
     s.update(pid(u) for u in extra)
     s.discard("")
     return s
@@ -75,8 +78,9 @@ TOPIC = [(("export", "overseas", "輸出", "海外", "trade fair", "import"), ["
 def kind(title, text=""):
     """酒の種類。タイトルで決まればそれ、決まらなければ本文側で（日本酒の話がワイン樽に触れる、などの取り違えを避ける）。"""
     for t in ((title or "").lower(), (text or "").lower()):
-        hits = [(name, q) for name, kw, q in KINDS if any(w in t for w in kw)]
-        if hits: return hits[0]
+        # いちばん先に出てくる種類の語で決める（"sake in a wine glass" は日本酒、"whisky aged in sake casks" はウイスキー）
+        hits = sorted((min(t.find(w) for w in kw if w in t), i, name, q) for i, (name, kw, q) in enumerate(KINDS) if any(w in t for w in kw))
+        if hits: return hits[0][2], hits[0][3]
     return KINDS[-1][0], KINDS[-1][2]
 
 

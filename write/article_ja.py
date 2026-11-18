@@ -111,9 +111,13 @@ def place_media(gen, medias):
         # 2026-11-19 久保さん「サムネが無い・全く一緒、にならないように」: 固有の検索語 → 汎用の検索語の順に、重複なしで必ず 1 枚
         text = " ".join(str(gen.get(k) or "") for k in ("title", "lead", "hero_caption", "hero_query", "hero_prompt"))
         c = photos.pick_unique([gen.get("hero_query")], hdesc, exclude=ex, max_vet=3, per_query=3)
-        if not c:   # 固有の写真が無ければ、酒の種類の汎用写真（重複なし）で必ず埋める
-            k = photos.kind(str(gen.get("hero_query") or ""), text)[0]
-            c = photos.pick_unique(photos.fallback_queries(text, title=str(gen.get("hero_query") or "")), f"{k} — story: {gen.get('title') or ''}",
+        k = photos.kind(f"{gen.get('hero_query') or ''} {gen.get('title') or ''}", text)[0]
+        if not c:   # 固有の写真が無ければ、検品済みの汎用写真の在庫（sns/photo_pool.json）から未使用の 1 枚
+            sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sns")); import card_photo
+            c = card_photo.from_pool(k)
+            if c: c = {**c, "credit": c["credit"]}
+        if not c:   # 在庫も無ければ、酒の種類の汎用写真をその場で探す（重複なし）
+            c = photos.pick_unique(photos.fallback_queries(text, title=f"{gen.get('hero_query') or ''} {gen.get('title') or ''}"), f"{k} — story: {gen.get('title') or ''}",
                                    exclude=ex, max_vet=8, generic=True)
         if c: gen["hero_image"] = c["url"]; gen["hero_credit"] = c["credit"]
     return gen

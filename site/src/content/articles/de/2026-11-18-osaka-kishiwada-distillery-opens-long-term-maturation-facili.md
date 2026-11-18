@@ -13,9 +13,9 @@ category: "蔵元"
 akita: false
 tags: ["Japanese whisky", "Osaka", "distillery", "maturation", "craft distilling"]
 sources: [{"name": "NHK", "title": "ウイスキー蒸留所で新しい熟成施設オープン 大阪 岸和田", "url": "https://news.web.nhk/newsweb/na/nd-20261109de72712"}]
-hero: "https://images.pexels.com/photos/32063683/pexels-photo-32063683.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+hero: "https://images.pexels.com/photos/18831653/pexels-photo-18831653.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
 heroAlt: "Hölzerne Whiskyfässer, die ruhig im Reifelager schlummern"
-heroCredit: "Foto: Dr. Mohammad  Hoque (Pexels)"
+heroCredit: "Foto: Graham Walker (Pexels)"
 ---
 
 Eine Whisky-Destillerie in Kishiwada in der Präfektur Osaka hat eine neue Anlage speziell für die Langzeitreifung eröffnet und dazu eine Einweihungsfeier abgehalten. Kishiwada ist eine Stadt im Süden der Präfektur Osaka an der Bucht von Osaka. Die Destillerie wurde 2025 eröffnet und ist die zweite Whisky-Destillerie in der Präfektur Osaka. Mit der neuen Anlage stärkt sie ihre Kapazität, den New Make in Ruhe reifen zu lassen.

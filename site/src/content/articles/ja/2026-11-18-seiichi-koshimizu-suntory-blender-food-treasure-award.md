@@ -13,6 +13,9 @@ category: "受賞"
 akita: false
 tags: ["Japanese whisky", "Suntory", "Blender", "Award", "Agency for Cultural Affairs", "Hibiki"]
 sources: [{"name": "サントリーホールディングス", "title": "輿水 精一(こしみず せいいち)サントリー名誉チーフブレンダーが令和8年度（第1回）文化庁「食の至宝」を受賞", "url": "https://www.suntory.co.jp/news/article/2026/15170.html"}]
+hero: "https://images.pexels.com/photos/12431191/pexels-photo-12431191.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+heroAlt: "ブレンダーの仕事を思わせる、琥珀色の原酒が並ぶテイスティング用のグラス"
+heroCredit: "写真: Cristian Mihaila（Pexels）"
 ---
 
 サントリーホールディングスは、名誉チーフブレンダーの輿水精一（こしみず・せいいち）氏が、令和8年度（2026年度）の文化庁「食の至宝」を受賞したと発表しました。今回が第1回となるこの顕彰で、輿水氏はシングルモルトの「山崎」「白州」、ブレンデッドウイスキーの「響」づくりに携わった功績を評価されました。日本のウイスキーが世界に知られるようになった過程に関わった作り手の一人が、国の文化行政の場で認められたことになります。

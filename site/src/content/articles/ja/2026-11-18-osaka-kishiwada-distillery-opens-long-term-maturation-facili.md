@@ -13,9 +13,9 @@ category: "蔵元"
 akita: false
 tags: ["Japanese whisky", "Osaka", "distillery", "maturation", "craft distilling"]
 sources: [{"name": "NHK", "title": "ウイスキー蒸留所で新しい熟成施設オープン 大阪 岸和田", "url": "https://news.web.nhk/newsweb/na/nd-20261109de72712"}]
-hero: "https://images.pexels.com/photos/32063683/pexels-photo-32063683.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+hero: "https://images.pexels.com/photos/18831653/pexels-photo-18831653.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
 heroAlt: "熟成庫で静かに眠るウイスキーの木樽"
-heroCredit: "写真: Dr. Mohammad  Hoque（Pexels）"
+heroCredit: "写真: Graham Walker（Pexels）"
 ---
 
 大阪府岸和田市にあるウイスキー蒸留所が、長期熟成専用の新しい施設をオープンし、記念式典を開きました。岸和田は大阪湾に面した大阪府南部の町です。この蒸留所は2025年に開業し、大阪府内では2カ所目のウイスキー蒸留所になります。新施設によって、原酒をじっくり寝かせる熟成能力を強化します。

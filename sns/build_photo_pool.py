@@ -12,9 +12,13 @@ import photos, stock
 POOL = os.path.join(HERE, "photo_pool.json")
 QUERIES = {
     "sake": ["sake", "japanese sake", "sake cup", "sake bottle", "sake brewery", "sake barrel", "tokkuri", "ochoko", "masu cup", "sake tasting",
-             "izakaya", "rice polishing", "japanese rice", "rice harvest japan", "sake brewery japan", "sake pouring", "japanese liquor", "nihonshu"],
+             "izakaya", "rice polishing", "japanese rice", "rice harvest japan", "sake brewery japan", "sake pouring", "japanese liquor", "nihonshu",
+             # 銘柄が写りにくいもの（樽・瓶の写真は他の蔵の銘柄が読めて検品で落ちやすい）
+             "sake glass", "sake set", "ceramic sake cup", "sugidama", "koji rice", "steamed rice", "rice grains", "japanese countryside",
+             "japanese village snow", "japanese wooden house", "japanese restaurant counter", "sashimi and sake", "japanese food drink", "onsen town"],
     "beer": ["craft beer", "beer glass", "beer tap", "brewery tanks", "hops", "beer bottles", "pint of beer", "brewery", "craft brewery", "beer pouring"],
-    "whisky": ["whisky glass", "whiskey glass", "whisky barrel", "pot still", "whisky distillery", "oak casks", "whiskey tasting", "japanese whisky"],
+    "whisky": ["whisky glass", "whiskey glass", "whisky barrel", "pot still", "whisky distillery", "oak casks", "whiskey tasting", "japanese whisky",
+               "whiskey on the rocks", "amber spirit glass", "barrel warehouse", "copper still"],
     "shochu": ["shochu", "japanese liquor glass", "sweet potato", "kagoshima", "distillery japan", "izakaya drinks", "barley grain", "japanese spirits"],
     "wine": ["vineyard", "wine grapes", "wine glass", "wine barrels", "grape harvest", "winery", "red wine", "white wine"],
     "gin": ["gin tonic", "gin glass", "juniper berries", "botanicals", "gin bottle", "cocktail glass gin"],

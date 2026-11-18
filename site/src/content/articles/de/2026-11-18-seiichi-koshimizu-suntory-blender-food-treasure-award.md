@@ -13,6 +13,9 @@ category: "受賞"
 akita: false
 tags: ["Japanese whisky", "Suntory", "Blender", "Award", "Agency for Cultural Affairs", "Hibiki"]
 sources: [{"name": "サントリーホールディングス", "title": "輿水 精一(こしみず せいいち)サントリー名誉チーフブレンダーが令和8年度（第1回）文化庁「食の至宝」を受賞", "url": "https://www.suntory.co.jp/news/article/2026/15170.html"}]
+hero: "https://images.pexels.com/photos/12431191/pexels-photo-12431191.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+heroAlt: "Verkostungsgläser mit bernsteinfarbenem Whisky, die an die Arbeit eines Blenders erinnern"
+heroCredit: "Foto: Cristian Mihaila (Pexels)"
 ---
 
 Suntory Holdings hat bekannt gegeben, dass der Ehren-Chefblender Seiichi Koshimizu den „Kulinarischen Schatz“ (Shoku no Shiho) der japanischen Kulturbehörde für das Haushaltsjahr 2026 (Reiwa 8) erhalten hat. In dieser ersten Verleihung der Auszeichnung wurde Koshimizu für seine Mitwirkung an den Single Malts Yamazaki und Hakushu sowie am Blended Whisky Hibiki gewürdigt. Damit wurde einer der Macher, die am Weg des japanischen Whiskys zu weltweiter Bekanntheit beteiligt waren, im Rahmen der staatlichen Kulturpolitik anerkannt.

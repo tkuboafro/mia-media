@@ -13,9 +13,9 @@ category: "蔵元"
 akita: false
 tags: ["Japanese whisky", "Osaka", "distillery", "maturation", "craft distilling"]
 sources: [{"name": "NHK", "title": "ウイスキー蒸留所で新しい熟成施設オープン 大阪 岸和田", "url": "https://news.web.nhk/newsweb/na/nd-20261109de72712"}]
-hero: "https://images.pexels.com/photos/32063683/pexels-photo-32063683.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+hero: "https://images.pexels.com/photos/18831653/pexels-photo-18831653.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
 heroAlt: "Barricas de madera de whisky reposando en silencio en la bodega de maduración"
-heroCredit: "Foto: Dr. Mohammad  Hoque (Pexels)"
+heroCredit: "Foto: Graham Walker (Pexels)"
 ---
 
 Una destilería de whisky de Kishiwada, en la prefectura de Osaka, ha abierto una nueva instalación dedicada a la maduración prolongada y ha celebrado una ceremonia conmemorativa. Kishiwada es una localidad del sur de la prefectura de Osaka, frente a la bahía de Osaka. La destilería abrió en 2025 y es la segunda destilería de whisky de la prefectura de Osaka. Con la nueva instalación refuerza su capacidad para dejar madurar con calma el destilado nuevo.

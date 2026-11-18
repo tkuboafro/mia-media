@@ -13,9 +13,9 @@ category: "蔵元"
 akita: false
 tags: ["Japanese whisky", "Osaka", "distillery", "maturation", "craft distilling"]
 sources: [{"name": "NHK", "title": "ウイスキー蒸留所で新しい熟成施設オープン 大阪 岸和田", "url": "https://news.web.nhk/newsweb/na/nd-20261109de72712"}]
-hero: "https://images.pexels.com/photos/32063683/pexels-photo-32063683.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+hero: "https://images.pexels.com/photos/18831653/pexels-photo-18831653.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
 heroAlt: "Houten whiskyvaten die rustig rijpen in het rijpingsmagazijn"
-heroCredit: "Foto: Dr. Mohammad  Hoque (Pexels)"
+heroCredit: "Foto: Graham Walker (Pexels)"
 ---
 
 Een whiskydistilleerderij in Kishiwada in de prefectuur Osaka heeft een nieuwe faciliteit speciaal voor langdurige rijping geopend en daarbij een herdenkingsceremonie gehouden. Kishiwada is een stad in het zuiden van de prefectuur Osaka, aan de baai van Osaka. De distilleerderij opende in 2025 en is de tweede whiskydistilleerderij in de prefectuur Osaka. Met de nieuwe faciliteit versterkt zij haar capaciteit om de nieuwe spirit geduldig te laten rijpen.
