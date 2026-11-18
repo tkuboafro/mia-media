@@ -27,6 +27,7 @@
 - 下の「Sub 時代」の launchd・secrets.env・run_daily.sh の記述は歴史。クラウドでは使わない
 
 ## 作業記録（クラウド）
+- 2026-11-19 IG状態「失敗」で Buffer ID に ig が 2 本ある 55 行を照合: 全件 1 本目＝認可切れエラー・2 本目＝投稿済みで重複なし。Notion の IG状態を投稿済み＋IG投稿URL に直した。IG の重複は磯蔵 1 件（39 本）だけ
 - 2026-11-19 mia_sns 修正は claude-workspace main b697c7d（MIA-mgr が cherry-pick）。再デプロイは Otacon 本体の作業で、受付から本体へは届かない → #cockpit で久保さんに再デプロイの可否を確認中。デプロイまでは IG状態 空・Buffer ID に古いエラー ID が残る 111 行で同じ連投が起きうる（Notion 一括修正はセッションの安全判定で不可）
 - 2026-11-19 IG @thesakewire に磯蔵（2026-10-05-isokura-…-8-percent）が 40 回投稿されていた件: 原因は mia_sns.py が Buffer ID の先頭（11/3 の認可切れエラー）を毎回読み「未送信に戻す→6h 後に再投稿」を 11/8〜11/18 に繰り返したこと。IG の送信待ちはこの 1 行で詰まり、他の記事は 11/8 以降 IG に出ていない。Notion の行を投稿済みに直してループ停止、コード修正は claude-workspace 8e047bf（再デプロイは Otacon に依頼）。削除 39 本の一覧は sns/ig_duplicates_isokura_20261119.md。常駐ブラウザは IG 未ログインで削除は未了（久保さんに確認中）
 - 2026-11-19 毎朝 06:37 JST の定期実行をこのセッション宛に作り直し（trig_01Gd1qoD5CNddjjSM8tKkb62）、MIA-mgr 宛の旧 trig_01FKqQhFgtnF87j8kWDVpzko を削除。~/mia-media → /home/user/mia-media のリンク作成
