@@ -1,5 +1,39 @@
 # MIA メディア（The Sake Wire）HANDOFF
 
+## 🟢 2026-11-19〜 クラウドの専用セッション mia-media（まずここを読む）
+- このセッションは **mia-media**: The Sake Wire（sakewire.com）の毎朝の記事作成・公開・SNS 投稿の監視、sakewire.com 側の SEO／AI 検索対策（llms.txt・robots・JSON-LD・蔵元ページの受賞歴）。11/19 に MIA-mgr のセッションから独立
+- 上位: MIA-mgr（claude-workspace `project/mia/HANDOFF.md`・セッション session_01WJxMgpND9B1BqEaX9JWYsT）。EC（Shopify・made-in-akita.com）は mia-ec（`project/mia/ec/HANDOFF.md`）
+- 久保さんへの確認は `python3 infra/otacon_hub/ask_otacon.py --case "mia-media" --kind ask "<1 問>"`（claude-workspace で実行）。自分の返答で久保さんに質問しない。**成功時の報告はしない**
+- 記録: このファイルの「## 作業記録（クラウド）」に 1 行足して commit・push（mia-media リポジトリ）。MIA 全体に関わる変化は MIA-mgr に send_message で 1 行
+
+### 毎朝の記事作成（06:37 JST）
+- `python3 cloud/daily.py`（手順は先頭の説明）: Drive「MIA-NEWS（Grok 自動収集）」1E9_QnNhULd9KkEfMqxlEwQPxzhZ9Gvuk の MIA-NEWS_YYYYMMDD.json → 公開済み md で使用済み判定 → Sonnet で重複判定 → 最大 3 本を Opus で執筆 → Notion → publish_batch（再レビュー・4 言語翻訳・ビルド・push）→ sns_texts
+- 実行の仕方: `python3 cloud/daily.py > <scratchpad>/daily_<日付>.log 2>&1` をバックグラウンドで → 公開 slug ごとに https://sakewire.com/en/<slug>/ が 200 か確認 → 成功なら返答は「完了」の 1 語だけ。失敗時は直せるもの（コード不具合）は直して push・再実行（公開済みかを先に確認し二重公開しない）、直せないもの（ログイン切れ・権限・外部停止）はここに 1 行＋MIA-mgr に send_message
+- 定期実行は **このセッションに届く** 形にする（別セッションや毎回新規セッションに飛ばす方式は push 権限が付かず失敗した・11/12）。11/18 までは MIA-mgr のセッションで受けていた（trig_01FKqQhFgtnF87j8kWDVpzko）
+- ニュースは Grok の自動実行「酒News」（毎朝 05:00・久保さんの Grok アカウント）。Drive に JSON が無い日は「候補なし」で正常終了
+- シークレット（名前だけ）: 環境変数 GCP_SM_SA_KEY_JSON、SM の mia-notion-token・unsplash-access-key・pexels-api-key・GDRIVE_READONLY_TOKEN_JSON。gcloud は `env -u CLOUDSDK_AUTH_ACCESS_TOKEN`
+
+### SNS（自動・監視だけ）
+- 投稿は claude-workspace の `infra/mia_sns/mia_sns.py`（Otacon ハブ・Cloud Run の /tick から呼ばれる。状態は Firestore mia_sns/state）。Notion「MIA SNS投稿管理」でステータス=投稿済み かつ投稿文がある行を古い順に出す
+- X @TheSakeWire・IG @thesakewire は Buffer 経由（SM buffer-api-key・GraphQL https://api.buffer.com）、Threads は API 直（SM threads-access-token・20 日ごとに自動延長）
+- 止まったときの見方: Buffer の lost authorization → 久保さんに Buffer でチャネル再接続を ask、戻しは claude-workspace `project/mia/tools/reset_ig_lostauth.py --apply`。Threads が止まる主因は「流す記事が尽きた」
+- ハブのコード修正後の再デプロイは Otacon に頼む（自分でデプロイしない）
+
+### 約束事
+- 画像は AI 生成しない（引用 → フリー素材 → 無ければ画像なし）。有料ストックは契約しない
+- 量産（batch_past.sh 等）は久保さんの指示があるときだけ
+- API キー・トークンをリポジトリに書かない。対外送信はしない
+- 下の「Sub 時代」の launchd・secrets.env・run_daily.sh の記述は歴史。クラウドでは使わない
+
+## 作業記録（クラウド）
+- 2026-11-19 専用セッションとして独立（MIA-mgr から引き継ぎ）
+- 2026-11-12〜18 MIA-mgr のセッションで毎朝 cloud/daily.py を実行（毎日 0〜3 本公開）
+- 2026-11-11 AI 検索対策: sakewire.com を GSC 登録・sitemap 送信、IndexNow で 2,427 URL、蔵元ページに受賞歴（出典つき）と Organization＋award の JSON-LD、llms.txt に受賞要約（e65b1ba）
+- 2026-11-08 llms.txt・robots.txt（AI クローラー許可）・全ページ JSON-LD（b543cbb）、全ページのフッターと llms.txt から made-in-akita.com/for-eu-importers へリンク（98fe54e）
+
+---
+（以下 Sub 時代の記録）
+
 最終更新: 2026-10-07（PL セッション）。
 
 **体制（2026-10-25〜）: このセッションは mia-media。上位は mia-mgr（~/work/Python/project/mia/HANDOFF.md）。Shopify EC は mia-ec（~/work/Python/project/mia/ec/HANDOFF.md）に移管。質問・確認は mia-mgr へ。**
