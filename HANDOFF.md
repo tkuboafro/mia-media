@@ -15,6 +15,7 @@
 
 ### SNS（自動・監視だけ）
 - 投稿は claude-workspace の `infra/mia_sns/mia_sns.py`（Otacon ハブ・Cloud Run の /tick から呼ばれる。状態は Firestore mia_sns/state）。Notion「MIA SNS投稿管理」でステータス=投稿済み かつ投稿文がある行を古い順に出す
+- IG @thesakewire のログイン ID はユーザー名 thesakewire（登録メール thesakewire@danshiko.com＝グループで tkubo@ の受信箱に届く。確認コードもここ）。パスワードはリポジトリ・SM に無い
 - X @TheSakeWire・IG @thesakewire は Buffer 経由（SM buffer-api-key・GraphQL https://api.buffer.com）、Threads は API 直（SM threads-access-token・20 日ごとに自動延長）
 - 止まったときの見方: Buffer の lost authorization → 久保さんに Buffer でチャネル再接続を ask、戻しは claude-workspace `project/mia/tools/reset_ig_lostauth.py --apply`。Threads が止まる主因は「流す記事が尽きた」
 - ハブのコード修正後の再デプロイは Otacon に頼む（自分でデプロイしない）
