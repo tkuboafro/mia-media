@@ -25,8 +25,8 @@ def _toks(s): return {t for t in re.findall(r"[a-z]{3,}", (s or "").lower()) if 
 
 UTM = "utm_source=the_sake_wire&utm_medium=referral"
 
-def openverse(q, n):
-    d = _get(f"https://api.openverse.org/v1/images/?{urllib.parse.urlencode({'q': q, 'license_type': 'commercial', 'page_size': n * 2, 'mature': 'false'})}")
+def openverse(q, n, page=1):
+    d = _get(f"https://api.openverse.org/v1/images/?{urllib.parse.urlencode({'q': q, 'license_type': 'commercial', 'page_size': n * 2, 'page': page, 'mature': 'false'})}")
     out = []
     for r in d.get("results", []):
         lic = (r.get("license") or "").lower()
@@ -36,17 +36,17 @@ def openverse(q, n):
                     "credit": f"写真: {r.get('creator') or r.get('source')}（{r.get('source')}, CC {lic.upper()}）", "page": r.get("foreign_landing_url"), "provider": "openverse"})
     return out
 
-def pexels(q, n):
+def pexels(q, n, page=1):
     k = _env("PEXELS_KEY")
     if not k: return []
-    d = _get(f"https://api.pexels.com/v1/search?{urllib.parse.urlencode({'query': q, 'per_page': n, 'orientation': 'landscape'})}", {"Authorization": k})
+    d = _get(f"https://api.pexels.com/v1/search?{urllib.parse.urlencode({'query': q, 'per_page': n, 'page': page, 'orientation': 'landscape'})}", {"Authorization": k})
     return [{"url": p["src"]["large2x"], "width": p["width"], "height": p["height"], "title": p.get("alt") or "", "tags": "",
              "credit": f"写真: {p['photographer']}（Pexels）", "page": p["url"], "provider": "pexels"} for p in d.get("photos", [])]
 
-def unsplash(q, n):
+def unsplash(q, n, page=1):
     k = _env("UNSPLASH_KEY")
     if not k: return []
-    d = _get(f"https://api.unsplash.com/search/photos?{urllib.parse.urlencode({'query': q, 'per_page': n, 'orientation': 'landscape', 'content_filter': 'high'})}", {"Authorization": f"Client-ID {k}"})
+    d = _get(f"https://api.unsplash.com/search/photos?{urllib.parse.urlencode({'query': q, 'per_page': n, 'page': page, 'orientation': 'landscape', 'content_filter': 'high'})}", {"Authorization": f"Client-ID {k}"})
     return [{"url": p["urls"]["regular"], "width": p["width"], "height": p["height"], "title": p.get("description") or p.get("alt_description") or "",
              "tags": " ".join(t.get("title", "") for t in p.get("tags", [])),
              # Unsplash API 規約: 撮影者と Unsplash へのリンク（utm 付き）を表示し、使った写真は download_location を叩く
@@ -59,17 +59,17 @@ def track(c):
         try: _get(c["dl"], {"Authorization": f"Client-ID {_env('UNSPLASH_KEY')}"})
         except Exception as e: print(f"[stock] unsplash track: {e}", file=sys.stderr)
 
-def pixabay(q, n):
+def pixabay(q, n, page=1):
     k = _env("PIXABAY_KEY")
     if not k: return []
-    d = _get(f"https://pixabay.com/api/?{urllib.parse.urlencode({'key': k, 'q': q, 'per_page': max(3, n), 'image_type': 'photo', 'orientation': 'horizontal', 'safesearch': 'true'})}")
+    d = _get(f"https://pixabay.com/api/?{urllib.parse.urlencode({'key': k, 'q': q, 'per_page': max(3, n), 'image_type': 'photo', 'orientation': 'horizontal', 'safesearch': 'true', 'page': page})}")
     return [{"url": p["largeImageURL"], "width": p["imageWidth"], "height": p["imageHeight"], "title": "", "tags": p.get("tags", ""),
              "credit": f"写真: {p['user']}（Pixabay）", "page": p["pageURL"], "provider": "pixabay"} for p in d.get("hits", [])]
 
-def search(q, n=6):
+def search(q, n=6, page=1):
     cands = []
     for fn in (pexels, unsplash, pixabay, openverse):
-        try: cands += fn(q, n)
+        try: cands += fn(q, n, page)
         except Exception as e: print(f"[stock] {fn.__name__}: {e}", file=sys.stderr)
     qt = _toks(q)
     scored = []
@@ -94,16 +94,26 @@ VET_PROMPT = ('You are the photo editor of The Sake Wire, a serious European new
               'Real photos may show readable bottle labels, brand names or brewery signage — that is fine, unless they name a different producer than the story is about. '
               'Accept only a photo you would actually run in a printed magazine. Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
 
-def vet(url, desc):
-    """Opus に画像を見せて可否を判定。判定不能なら False（安全側）。"""
+# 2026-11-19: IG カード・ヒーローの最後の受け皿（汎用写真）用。記事固有の銘柄・地域は求めず、「酒の種類と日本の雰囲気が合い、誤解を招かない」で判定
+VET_GENERIC = ('You are the photo editor of The Sake Wire, a serious European news site about Japanese sake, shochu, wine and beer. '
+               'Read the image file {path}. It is proposed as a GENERIC mood photo (not a depiction of the specific story) for: "{desc}".\n'
+               'It does NOT need to show the specific producer, product, place or event. Accept a good-looking real photo of the drink type or its world '
+               '(glasses, bottles without other producers\' readable labels, barrels, tanks, rice, fields, ingredients, Japanese scenery).\n'
+               'Reject (ok=false) if ANY apply: it shows a different drink than the story is about (e.g. wine for a sake story, Korean soju for Japanese sake); '
+               'it clearly shows a non-Japanese setting when the story is set in Japan; readable labels or signage naming another producer; '
+               'a person\'s face is prominent; it looks AI-generated; low quality, watermark, collage or screenshot. '
+               'Answer ONLY JSON: {{"ok": true|false, "reason": "<15 words"}}')
+
+def vet(url, desc, generic=False):
+    """Opus に画像を見せて可否を判定。判定不能なら False（安全側）。generic=True は汎用写真の基準（VET_GENERIC）。"""
     import subprocess, tempfile
     try:
         fd, path = tempfile.mkstemp(suffix=".jpg"); os.close(fd)
         if url.startswith("file://"): path = url[7:]
         else:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh) sakewire/1.0 (editorial; tkubo@danshiko.com)"})  # Wikimedia は UA 必須
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh) sakewire/1.0 (editorial; +https://sakewire.com)"})  # Wikimedia は UA 必須
             with urllib.request.urlopen(req, timeout=60) as r, open(path, "wb") as f: f.write(r.read())
-        r = subprocess.run(["claude", "-p", VET_PROMPT.format(path=path, desc=desc), "--model", VET_MODEL, "--allowedTools", "Read", "--output-format", "json"],
+        r = subprocess.run(["claude", "-p", (VET_GENERIC if generic else VET_PROMPT).format(path=path, desc=desc), "--model", VET_MODEL, "--allowedTools", "Read", "--output-format", "json"],
                            capture_output=True, text=True, timeout=300)
         raw = json.loads(r.stdout).get("result", ""); j = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
         if not j.get("ok"): print(f"[vet] NG {url[:60]}: {j.get('reason')}", file=sys.stderr)

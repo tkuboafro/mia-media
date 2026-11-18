@@ -77,19 +77,15 @@ def place_media(gen, medias):
         return ""
     body = re.sub(r"\[\[media:(\d+)(\|[^\]]*)?\]\]", sub, gen["body_md"])
     n = 0
+    import photos
+    ex = photos.used([m["url"] for m in medias if m.get("type") == "image"])   # 2026-11-19: 過去記事・この記事で使った写真は使わない
     def fill(query, prompt, cap):
-        """フリー素材 → 無ければ生成。上限 MAX_GEN。"""
+        """フリー素材（重複なし）。AI 生成はしない（久保さん方針: 引用 → フリー素材 → 無ければ画像なし）。上限 MAX_GEN。"""
         nonlocal n
-        if n >= MAX_GEN: return ""
-        desc = f"{cap} / {query or prompt}"
-        c = stock.pick(query, desc) if query else None
+        if n >= MAX_GEN or not query: return ""
+        c = photos.pick_unique([query], f"{cap} / {query}", exclude=ex, max_vet=3)
         if c:
-            n += 1; return f"[[image:{c['url']}|{cap}|{c['credit']}]]"
-        for _ in range(2):  # 生成も検品し、落ちたら1回だけ作り直す
-            url = genimg.try_generate(prompt) if prompt else None
-            if not url: return ""
-            if stock.vet(url, desc):
-                n += 1; return f"[[image:{url}|{cap}|{genimg.CREDIT_JA}]]"
+            ex.add(photos.pid(c["url"])); n += 1; return f"[[image:{c['url']}|{cap}|{c['credit']}]]"
         return ""
     def fsub(mt):
         parts = [x.strip() for x in mt.group(1).split("|")]
@@ -109,13 +105,17 @@ def place_media(gen, medias):
             gen["hero_image"] = m["url"]; gen["hero_credit"] = m.get("credit") or "画像提供: プレスリリースより"
     except Exception: pass
     hdesc = f"{gen.get('hero_caption') or ''} / {gen.get('hero_query') or gen.get('hero_prompt') or ''}"
-    if not gen["hero_image"] and gen.get("hero_query"):
-        c = stock.pick(gen["hero_query"], hdesc)
+    if gen["hero_image"] and gen["hero_credit"].startswith("写真") and photos.pid(gen["hero_image"]) in photos.used():
+        gen["hero_image"] = None   # 引用でもフリー素材が他の記事と同じ写真なら選び直す
+    if not gen["hero_image"]:
+        # 2026-11-19 久保さん「サムネが無い・全く一緒、にならないように」: 固有の検索語 → 汎用の検索語の順に、重複なしで必ず 1 枚
+        text = " ".join(str(gen.get(k) or "") for k in ("title", "lead", "hero_caption", "hero_query", "hero_prompt"))
+        c = photos.pick_unique([gen.get("hero_query")], hdesc, exclude=ex, max_vet=3, per_query=3)
+        if not c:   # 固有の写真が無ければ、酒の種類の汎用写真（重複なし）で必ず埋める
+            k = photos.kind(str(gen.get("hero_query") or ""), text)[0]
+            c = photos.pick_unique(photos.fallback_queries(text, title=str(gen.get("hero_query") or "")), f"{k} — story: {gen.get('title') or ''}",
+                                   exclude=ex, max_vet=8, generic=True)
         if c: gen["hero_image"] = c["url"]; gen["hero_credit"] = c["credit"]
-    if not gen["hero_image"] and gen.get("hero_prompt"):
-        for _ in range(2):
-            url = genimg.try_generate(gen["hero_prompt"])
-            if url and stock.vet(url, hdesc): gen["hero_image"] = url; gen["hero_credit"] = genimg.CREDIT_JA; break
     return gen
 
 def generate(row, feedback=None, model="opus", extra=()):

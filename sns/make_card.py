@@ -19,7 +19,9 @@ def render(meta):
     slug = meta["slug"]; tr = (meta.get("translations") or {}).get("en") or {}
     title = tr.get("title") or meta["ja"]["title"]
     cat = CAT.get((meta.get("row") or {}).get("category"), "News"); region = meta.get("regionEn") or ""
-    photo, credit = usable_photo(meta)
+    # 2026-11-19: 文字だけのカード・同じ写真のカードを作らない（写真は card_photo が重複なしで決める）
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import card_photo
+    photo, credit = card_photo.choose(meta)
     size = 76 if len(title) < 60 else (66 if len(title) < 85 else 58)
     desc = tr.get("description") or ""
     if not photo: size = 96 if len(title) < 60 else (84 if len(title) < 85 else 74)
