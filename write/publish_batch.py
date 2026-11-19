@@ -89,13 +89,14 @@ def prepare(slug):
     try:   # IG カードも同じ push で載せる（SNS 側で個別に push すると一括公開の push とぶつかる）
         sys.path.insert(0, f"{HOME}/sns"); import make_card
         png, _ = make_card.render(meta); paths.append(png)
+        paths.append(os.path.join(HOME, "sns", "card_photos.json"))   # カード写真の台帳（重複防止）も同じ push に載せる
     except Exception as e: print("card skip", slug, str(e)[:100], flush=True)
     return paths + imgs, note
 
 def ship(paths, n):
     b = run("npm", "run", "build", cwd=publish.SITE)
     if b.returncode != 0: print(b.stdout[-1500:], b.stderr[-800:], flush=True); return False
-    run("git", "pull", "-q", "--rebase", "--autostash"); run("git", "add", *paths)
+    run("git", "pull", "-q", "--rebase", "--autostash"); run("git", "add", *sorted({os.path.realpath(p) for p in paths}))
     run("git", "-c", "user.name=MIA Journal bot", "-c", "user.email=tkubo@danshiko.com", "commit", "-q", "-m", f"journal: publish {n} articles")
     for i in range(6):   # 他のジョブ（SNS カード・HANDOFF 更新）と push がぶつかることがあるので、間を空けて取り直す
         p = run("git", "push", "-q")
