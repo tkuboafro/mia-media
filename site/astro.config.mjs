@@ -6,7 +6,7 @@ export default defineConfig({
   site: "https://sakewire.com",
   base: "/",
   trailingSlash: "always",
-  integrations: [sitemap()],
+  integrations: [sitemap({ filter: (page) => page !== "https://sakewire.com/" })],   // / は言語の振り分けだけ（正規は /en/）
   i18n: {
     defaultLocale: "en",
     locales: ["en", "nl", "de", "es", "ja"],
