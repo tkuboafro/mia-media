@@ -27,6 +27,7 @@
 - 下の「Sub 時代」の launchd・secrets.env・run_daily.sh の記述は歴史。クラウドでは使わない
 
 ## 作業記録（クラウド）
+- 2026-11-20 Sub 復活で Sub 時代の launchd（mia-sns-post ほか）が動いた件の確認（MIA-mgr 依頼）: 11/19 00:00Z 以降の投稿は X 3・Threads 3（どちらも 11/19 公開の 3 本が 1 回ずつ・二重なし）、IG は Buffer に 10 回送られ全件エラー（IG に出たのは 0 本・二重なし）。IG のエラーは「lost authorization」で 11/19 04:10Z から。11/18 20:08Z の IG パスワード変更で Buffer の接続が切れたとみられる → Buffer で IG チャネルの再接続を #cockpit で依頼（w6pnu9vt）。Mac で戻す launchd は無し（MIA-mgr の見立てどおり）
 - 2026-11-19 未投稿 IG のカード作り直し完了（229 本・全件 写真あり・重複なし）。写真の在庫 sns/photo_pool.json の未使用: 日本酒 75・ビール 21・ウイスキー 22・焼酎 9・ワイン 15・ジン 4・泡盛 6・梅酒 6。減ったら `python3 sns/build_photo_pool.py sake=<総数>` で積み増し（検品通過率 約 12〜25%）
 - 2026-11-19 06:37 の日次: 3 本公開（雪の茅舎 全米歓評会・輿水精一 食の至宝・岸和田の熟成庫）。同じ実行の 2 本が同じヒーロー、1 本がヒーローなし → 差し替え（f361189）。原因（同じ実行の原稿が重複判定に入らない・hero_query の wine に引っぱられ酒の種類を誤判定・ウイスキー写真がスコッチ銘柄で全滅）を修正。IG カード用の検品済み写真の在庫 sns/photo_pool.json を build_photo_pool.py で積み増し中（検品通過率 約 12%）
 - 2026-11-19 久保さん「今すぐデプロイしていいよ」（otacon-hub・main b7ab698）。mia-media からのデプロイ（SM google-drive-operate-sa-key の SA に切り替え）はセッションの安全判定で不可 → Otacon 受付に承認を中継（t1ZxZJ6a）。デプロイは Otacon 本体待ち
